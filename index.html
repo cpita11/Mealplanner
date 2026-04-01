@@ -9,102 +9,115 @@
 <meta name="apple-mobile-web-app-title" content="Meal Plan 2">
 <title>Meal Plan 2</title>
 <style>
-:root {
-  --bg: #0f1a14; --bg2: #162010; --card: #1c2b1e; --border: #2d4030;
-  --ink: #eef5ee; --ink-soft: #8aab8e; --ink-faint: #3d5540;
-  --accent: #7ec87a; --accent-dark: #4a9446; --accent-glow: rgba(126,200,122,0.15);
-  --red: #e07060; --yellow: #e8c06a; --blue: #6aa8d8; --orange: #e8956a;
-  --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
+:root{
+  --bg:#0f1a14;--bg2:#162010;--card:#1c2b1e;--border:#2d4030;
+  --ink:#eef5ee;--ink-soft:#8aab8e;--ink-faint:#3d5540;
+  --accent:#7ec87a;--accent-dark:#4a9446;--accent-glow:rgba(126,200,122,0.15);
+  --red:#e07060;--yellow:#e8c06a;--blue:#6aa8d8;--orange:#e8956a;
+  --purple:#b088d8;--pink:#e088a8;--teal:#68c8b8;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; overscroll-behavior: none; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overscroll-behavior:none;}
+.nav{position:sticky;top:0;z-index:200;background:var(--bg);border-bottom:1px solid var(--border);padding:calc(var(--safe-top)+10px) 16px 0;}
+.nav-title{font-size:20px;font-weight:700;letter-spacing:-0.3px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.nav-title em{color:var(--accent);font-style:normal;}
+.tabs{display:flex;}
+.tab{flex:1;text-align:center;padding:10px 4px;font-size:12px;font-weight:600;color:var(--ink-faint);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;user-select:none;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.page{display:none;padding:16px 16px calc(var(--safe-bottom)+80px);}
+.page.active{display:block;}
+.budget-bar{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:16px;}
+.budget-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.budget-label{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:0.5px;text-transform:uppercase;}
+.budget-num{font-size:20px;font-weight:700;}
+.budget-num small{font-size:13px;color:var(--ink-soft);font-weight:400;}
+.budget-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.budget-fill{height:100%;border-radius:3px;background:var(--accent);transition:width 0.4s ease,background 0.3s;}
+.budget-fill.warn{background:var(--yellow);}
+.budget-fill.over{background:var(--red);}
+.sec-hd{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink-faint);margin:16px 0 10px;}
+.cuisine-scroll{overflow-x:auto;display:flex;gap:6px;margin-bottom:12px;padding-bottom:2px;scrollbar-width:none;}
+.cuisine-scroll::-webkit-scrollbar{display:none;}
+.ctag{white-space:nowrap;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--ink-soft);background:var(--bg2);user-select:none;transition:all 0.15s;}
+.ctag.active{background:var(--accent-glow);border-color:var(--accent);color:var(--accent);}
+.day-card{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.2s;}
+.day-card.picked{border-color:var(--accent-dark);}
+.day-hd{display:flex;align-items:center;padding:13px 14px;cursor:pointer;user-select:none;}
+.day-name{font-size:13px;font-weight:700;min-width:82px;}
+.day-meal{flex:1;font-size:12px;color:var(--ink-soft);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 8px;}
+.day-meal.set{color:var(--accent);}
+.day-cost{font-size:12px;font-weight:700;color:var(--ink-faint);min-width:34px;text-align:right;}
+.day-cost.set{color:var(--yellow);}
+.picker{border-top:1px solid var(--border);padding:10px;display:none;flex-direction:column;gap:6px;}
+.picker.open{display:flex;}
 
-/* NAV */
-.nav { position: sticky; top: 0; z-index: 200; background: var(–bg); border-bottom: 1px solid var(–border); padding: calc(var(–safe-top) + 10px) 16px 0; }
-.nav-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-.nav-title em { color: var(–accent); font-style: normal; }
-.tabs { display: flex; }
-.tab { flex: 1; text-align: center; padding: 10px 4px; font-size: 12px; font-weight: 600; color: var(–ink-faint); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; user-select: none; }
-.tab.active { color: var(–accent); border-bottom-color: var(–accent); }
+/* CHIP */
+.chip{padding:10px 12px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(–border);color:var(–ink-soft);background:var(–bg2);user-select:none;transition:all 0.15s;display:flex;align-items:center;justify-content:space-between;}
+.chip-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0;}
+.chip-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chip-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:8px;}
+.chip-meta{font-size:10px;opacity:0.6;white-space:nowrap;}
+.spicy-note{font-size:11px;}
+.expand-icon{font-size:10px;opacity:0.5;padding:2px 4px;}
+.chip.sel{background:var(–accent-glow);border-color:var(–accent);color:var(–accent);}
+.chip.mexican{border-color:#5a3a1a;}.chip.mexican.sel{background:rgba(232,149,106,0.15);border-color:var(–orange);color:var(–orange);}
+.chip.italian{border-color:#1a3a5a;}.chip.italian.sel{background:rgba(106,168,216,0.15);border-color:var(–blue);color:var(–blue);}
+.chip.japanese{border-color:#5a1a2a;}.chip.japanese.sel{background:rgba(224,136,168,0.15);border-color:var(–pink);color:var(–pink);}
+.chip.thai{border-color:#3a1a5a;}.chip.thai.sel{background:rgba(176,136,216,0.15);border-color:var(–purple);color:var(–purple);}
+.chip.indian{border-color:#5a3a1a;}.chip.indian.sel{background:rgba(232,192,106,0.15);border-color:var(–yellow);color:var(–yellow);}
+.chip.mediterranean{border-color:#1a5a4a;}.chip.mediterranean.sel{background:rgba(104,200,184,0.15);border-color:var(–teal);color:var(–teal);}
+.chip.american{border-color:#2a3a5a;}.chip.american.sel{background:rgba(106,168,216,0.15);border-color:var(–blue);color:var(–blue);}
+.chip.chinese{border-color:#5a1a1a;}.chip.chinese.sel{background:rgba(224,112,96,0.15);border-color:var(–red);color:var(–red);}
+.chip.healthy{border-color:#1a3a1a;}.chip.healthy.sel{background:rgba(126,200,122,0.15);border-color:var(–accent);color:var(–accent);}
 
-/* PAGES */
-.page { display: none; padding: 16px 16px calc(var(–safe-bottom) + 80px); }
-.page.active { display: block; }
+/* RECIPE PANEL */
+.recipe-panel{background:var(–bg);border:1px solid var(–border);border-radius:10px;overflow:hidden;display:none;margin-top:-4px;}
+.recipe-panel.open{display:block;}
+.recipe-header{padding:10px 12px 6px;font-size:12px;font-weight:700;color:var(–ink-soft);border-bottom:1px solid var(–border);}
+.recipe-section{padding:8px 12px;border-bottom:1px solid var(–border);}
+.recipe-section:last-of-type{border-bottom:none;}
+.recipe-cat-label{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(–ink-faint);margin-bottom:5px;}
+.recipe-tags{display:flex;flex-wrap:wrap;gap:4px;}
+.rtag{font-size:11px;background:var(–card);border:1px solid var(–border);border-radius:6px;padding:3px 8px;color:var(–ink-soft);}
+.recipe-actions{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(–border);}
+.btn-pick{flex:1;padding:10px;background:var(–accent);color:var(–bg);border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:-apple-system,sans-serif;}
+.btn-close{padding:10px 14px;background:transparent;color:var(–ink-faint);border:1px solid var(–border);border-radius:10px;font-size:13px;cursor:pointer;font-family:-apple-system,sans-serif;}
 
-/* BUDGET */
-.budget-bar { background: var(–card); border: 1px solid var(–border); border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; }
-.budget-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.budget-label { font-size: 12px; font-weight: 700; color: var(–ink-soft); letter-spacing: 0.5px; text-transform: uppercase; }
-.budget-num { font-size: 20px; font-weight: 700; }
-.budget-num small { font-size: 13px; color: var(–ink-soft); font-weight: 400; }
-.budget-track { height: 6px; background: var(–border); border-radius: 3px; overflow: hidden; }
-.budget-fill { height: 100%; border-radius: 3px; background: var(–accent); transition: width 0.4s ease, background 0.3s; }
-.budget-fill.warn { background: var(–yellow); }
-.budget-fill.over { background: var(–red); }
-
-/* SECTION HEADER */
-.sec-hd { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(–ink-faint); margin: 16px 0 10px; }
-
-/* DAY CARDS */
-.day-card { background: var(–card); border: 1px solid var(–border); border-radius: 14px; margin-bottom: 10px; overflow: hidden; transition: border-color 0.2s; }
-.day-card.picked { border-color: var(–accent-dark); }
-.day-hd { display: flex; align-items: center; padding: 13px 14px; cursor: pointer; user-select: none; }
-.day-name { font-size: 13px; font-weight: 700; min-width: 82px; }
-.day-meal { flex: 1; font-size: 12px; color: var(–ink-soft); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0 8px; }
-.day-meal.set { color: var(–accent); }
-.day-cost { font-size: 12px; font-weight: 700; color: var(–ink-faint); min-width: 34px; text-align: right; }
-.day-cost.set { color: var(–yellow); }
-
-/* MEAL PICKER */
-.picker { border-top: 1px solid var(–border); padding: 10px; display: none; flex-wrap: wrap; gap: 6px; }
-.picker.open { display: flex; }
-.chip { padding: 6px 11px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(–border); color: var(–ink-soft); background: var(–bg2); user-select: none; transition: all 0.15s; }
-.chip.sel { background: var(–accent-glow); border-color: var(–accent); color: var(–accent); }
-.chip.mexican.sel { background: rgba(232,149,106,0.15); border-color: var(–orange); color: var(–orange); }
-.chip.italian.sel { background: rgba(106,168,216,0.15); border-color: var(–blue); color: var(–blue); }
-.chip.healthy.sel { background: rgba(126,200,122,0.15); border-color: var(–accent); color: var(–accent); }
-.chip.batch.sel { background: rgba(232,192,106,0.15); border-color: var(–yellow); color: var(–yellow); }
-.clear-btn { width: 100%; margin-top: 4px; padding: 8px; border-radius: 10px; background: transparent; border: 1px dashed var(–border); color: var(–ink-faint); font-family: -apple-system, BlinkMacSystemFont, ‘Helvetica Neue’, sans-serif; font-size: 12px; cursor: pointer; }
-
-/* BREAKFAST GRID */
-.bfast-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-.bfast-card { background: var(–card); border: 1px solid var(–border); border-radius: 14px; padding: 12px; cursor: pointer; user-select: none; transition: all 0.15s; }
-.bfast-card.sel { border-color: var(–accent); background: var(–accent-glow); }
-.bfast-icon { font-size: 20px; margin-bottom: 4px; }
-.bfast-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-.bfast-detail { font-size: 11px; color: var(–ink-soft); }
-.bfast-cost { font-size: 11px; font-weight: 700; color: var(–yellow); margin-top: 4px; }
-
-/* GROCERY PAGE */
-.groc-summary { background: var(–card); border: 1px solid var(–border); border-radius: 16px; padding: 14px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; }
-.groc-stat-label { font-size: 12px; color: var(–ink-soft); margin-bottom: 2px; }
-.groc-stat-val { font-size: 18px; font-weight: 700; }
-.copy-btn { width: 100%; padding: 14px; background: var(–accent); color: var(–bg); border: none; border-radius: 14px; font-family: -apple-system, BlinkMacSystemFont, ‘Helvetica Neue’, sans-serif; font-size: 14px; font-weight: 800; cursor: pointer; margin-bottom: 14px; transition: background 0.2s; }
-.copy-btn.done { background: var(–accent-dark); }
-.ingr-block { background: var(–card); border: 1px solid var(–border); border-radius: 14px; margin-bottom: 10px; overflow: hidden; }
-.ingr-hd { padding: 10px 14px; border-bottom: 1px solid var(–border); display: flex; justify-content: space-between; }
-.ingr-cat { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(–ink-soft); }
-.ingr-ct { font-size: 11px; color: var(–ink-faint); }
-.ingr-row { display: flex; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(–border); font-size: 13px; }
-.ingr-row:last-child { border-bottom: none; }
-.dot { width: 6px; height: 6px; border-radius: 50%; background: var(–accent); margin-right: 10px; flex-shrink: 0; }
-.empty { text-align: center; padding: 40px 20px; color: var(–ink-faint); font-size: 13px; line-height: 1.6; }
-
-/* STOCK PAGE */
-.stock-intro { background: var(–card); border: 1px solid var(–border); border-radius: 14px; padding: 14px; margin-bottom: 14px; font-size: 13px; color: var(–ink-soft); line-height: 1.5; }
-.flag-banner { background: rgba(224,112,96,0.1); border: 1px solid rgba(224,112,96,0.3); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; color: var(–red); font-weight: 600; display: none; }
-.flag-banner.show { display: block; }
-.stock-row { display: flex; align-items: center; background: var(–card); border: 1px solid var(–border); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; user-select: none; transition: all 0.15s; }
-.stock-row.flagged { border-color: var(–red); background: rgba(224,112,96,0.08); }
-.stock-icon { width: 28px; height: 28px; border-radius: 8px; border: 2px solid var(–border); display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; font-size: 14px; }
-.stock-row.flagged .stock-icon { background: var(–red); border-color: var(–red); }
-.stock-name { font-size: 13px; font-weight: 500; }
-.stock-sub { font-size: 11px; color: var(–ink-faint); margin-top: 1px; }
+.clear-btn{width:100%;margin-top:2px;padding:8px;border-radius:10px;background:transparent;border:1px dashed var(–border);color:var(–ink-faint);font-family:-apple-system,sans-serif;font-size:12px;cursor:pointer;}
+.bfast-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.bfast-card{background:var(–card);border:1px solid var(–border);border-radius:14px;padding:12px;cursor:pointer;user-select:none;transition:all 0.15s;}
+.bfast-card.sel{border-color:var(–accent);background:var(–accent-glow);}
+.bfast-icon{font-size:20px;margin-bottom:4px;}
+.bfast-name{font-size:13px;font-weight:600;margin-bottom:2px;}
+.bfast-detail{font-size:11px;color:var(–ink-soft);}
+.bfast-cost{font-size:11px;font-weight:700;color:var(–yellow);margin-top:4px;}
+.groc-summary{background:var(–card);border:1px solid var(–border);border-radius:16px;padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;}
+.groc-stat-label{font-size:12px;color:var(–ink-soft);margin-bottom:2px;}
+.groc-stat-val{font-size:18px;font-weight:700;}
+.copy-btn{width:100%;padding:14px;background:var(–accent);color:var(–bg);border:none;border-radius:14px;font-family:-apple-system,sans-serif;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:14px;transition:background 0.2s;}
+.copy-btn.done{background:var(–accent-dark);}
+.ingr-block{background:var(–card);border:1px solid var(–border);border-radius:14px;margin-bottom:10px;overflow:hidden;}
+.ingr-hd{padding:10px 14px;border-bottom:1px solid var(–border);display:flex;justify-content:space-between;}
+.ingr-cat{font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(–ink-soft);}
+.ingr-ct{font-size:11px;color:var(–ink-faint);}
+.ingr-row{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(–border);font-size:13px;}
+.ingr-row:last-child{border-bottom:none;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(–accent);margin-right:10px;flex-shrink:0;}
+.empty{text-align:center;padding:40px 20px;color:var(–ink-faint);font-size:13px;line-height:1.6;}
+.stock-intro{background:var(–card);border:1px solid var(–border);border-radius:14px;padding:14px;margin-bottom:14px;font-size:13px;color:var(–ink-soft);line-height:1.5;}
+.flag-banner{background:rgba(224,112,96,0.1);border:1px solid rgba(224,112,96,0.3);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(–red);font-weight:600;display:none;}
+.flag-banner.show{display:block;}
+.stock-row{display:flex;align-items:center;background:var(–card);border:1px solid var(–border);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;user-select:none;}
+.stock-row.flagged{border-color:var(–red);background:rgba(224,112,96,0.08);}
+.stock-icon{width:28px;height:28px;border-radius:8px;border:2px solid var(–border);display:flex;align-items:center;justify-content:center;margin-right:12px;flex-shrink:0;font-size:14px;}
+.stock-row.flagged .stock-icon{background:var(–red);border-color:var(–red);}
+.stock-name{font-size:13px;font-weight:500;}
+.stock-sub{font-size:11px;color:var(–ink-faint);margin-top:1px;}
 </style>
 
 </head>
 <body>
-
 <div class="nav">
   <div class="nav-title">🥗 Meal Plan <em>2</em></div>
   <div class="tabs">
@@ -113,21 +126,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-se
     <div class="tab" onclick="goPage('stock',this)">🚨 Low Stock</div>
   </div>
 </div>
-
 <div class="page active" id="page-plan">
   <div class="budget-bar">
-    <div class="budget-row">
-      <div class="budget-label">Weekly Budget</div>
-      <div class="budget-num" id="bAmt">$0 <small>/ $100</small></div>
-    </div>
+    <div class="budget-row"><div class="budget-label">Weekly Budget</div><div class="budget-num" id="bAmt">$0 <small>/ $100</small></div></div>
     <div class="budget-track"><div class="budget-fill" id="bFill" style="width:0%"></div></div>
   </div>
   <div class="sec-hd">🌙 Dinners — Pick 5</div>
+  <div class="cuisine-scroll" id="cuisineFilter"></div>
   <div id="dinnerDays"></div>
   <div class="sec-hd">☀️ Breakfast style this week</div>
   <div class="bfast-grid" id="bfastGrid"></div>
 </div>
-
 <div class="page" id="page-grocery">
   <div class="groc-summary">
     <div><div class="groc-stat-label">Items needed</div><div class="groc-stat-val" id="gCount">0</div></div>
@@ -136,283 +145,262 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-se
   <button class="copy-btn" id="copyBtn" onclick="copyGrocery()">📋 Copy Grocery List</button>
   <div id="grocList"></div>
 </div>
-
 <div class="page" id="page-stock">
-  <div class="stock-intro">Tap anything running low — both you and Mechelle can flag items and they'll auto-appear on the grocery list. 🛒</div>
+  <div class="stock-intro">Tap anything running low — both you and Mechelle can flag items. They'll auto-appear on the grocery list. 🛒</div>
   <div class="flag-banner" id="flagBanner"></div>
   <div id="stockList"></div>
 </div>
 
 <script>
-var BUDGET = 100;
-var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+var BUDGET=100,DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday'],activeCuisine='all',openRecipe=null;
 
-var meals = [
-  {id:1, name:'Chicken Tacos', cat:'mexican', emoji:'🌮', cost:14, time:'25 min',
-   ing:{Produce:['3 On The Vine Tomatoes','2 Avocados','Cilantro','2 Limes'], Meat:['1.5 lb Chicken Breast'], Pantry:['McCormick Taco Seasoning','Herdez Salsa Verde','Rosarita Refried Beans','Signature SELECT Black Beans'], Bread:['La Comadre Sonora Style Flour Tortillas']}},
-  {id:2, name:'Chicken Burrito Bowls', cat:'mexican', emoji:'🫙', cost:13, time:'25 min',
-   ing:{Produce:['2 Avocados','Cilantro','1 Lime','1 Red Bell Pepper'], Meat:['1.5 lb Chicken Breast'], Pantry:['McCormick Taco Seasoning','Herdez Salsa Verde','Rosarita Refried Beans','Signature SELECT Black Beans'], Vegetables:['Baby Gold Potatoes']}},
-  {id:3, name:'Chicken Quesadillas', cat:'mexican', emoji:'🧀', cost:11, time:'20 min',
-   ing:{Meat:['Open Nature Chicken Sausage 12oz'], Dairy:['Lucerne Colby Jack Cheese Slices','Lucerne Mozzarella'], Bread:['Mission White Corn Tortillas'], Pantry:['Herdez Salsa Verde'], Produce:['1 Red Bell Pepper','1 Avocado']}},
-  {id:4, name:'Spaghetti & Meat Sauce', cat:'italian', emoji:'🍝', cost:10, time:'25 min',
-   ing:{Pantry:['Barilla Spaghetti 16oz','Signature SELECT Pasta Sauce Garlic Basil'], Meat:['Signature SELECT Turkey Pepperoni'], Dairy:['Lucerne Mozzarella 8oz']}},
-  {id:5, name:'Flatbread Pizza Night', cat:'italian', emoji:'🍕', cost:9, time:'20 min',
-   ing:{Bread:['Signature SELECT Garlic Flatbread Naan'], Pantry:['Signature SELECT Pizza Sauce'], Meat:['Signature SELECT Turkey Pepperoni'], Dairy:['Lucerne Mozzarella 8oz']}},
-  {id:6, name:'Fusilli with Zucchini & Kale', cat:'italian', emoji:'🍃', cost:10, time:'25 min',
-   ing:{Pantry:['De Cecco Fusilli 16oz','Signature SELECT Cannellini Beans'], Produce:['2 Zucchini','Cal-Organic Kale','1 Lemon'], Herbs:['Sage','Thyme']}},
-  {id:7, name:'Rigatoni Bake', cat:'italian', emoji:'🫙', cost:11, time:'30 min',
-   ing:{Pantry:['Signature SELECT Rigatoni','Signature SELECT Pasta Sauce Garlic Basil'], Dairy:['Lucerne Mozzarella','Lucerne Heavy Whipping Cream'], Produce:['2 Zucchini','2 Shallots']}},
-  {id:8, name:'Tuscan White Bean Soup', cat:'italian', emoji:'🫘', cost:9, time:'30 min',
-   ing:{Pantry:['Signature SELECT Cannellini Beans','Signature SELECT Pasta Sauce'], Produce:['Cal-Organic Kale','Leek','4 Shallots'], Herbs:['Thyme','Sage'], Dairy:['Lucerne Heavy Whipping Cream']}},
-  {id:9, name:'Sheet Pan Chicken Sausage', cat:'healthy', emoji:'🍳', cost:11, time:'30 min',
-   ing:{Produce:['1 Yellow Bell Pepper','1 Red Bell Pepper','2 Carrots'], Meat:['Open Nature Chicken Sausage 12oz'], Vegetables:['Baby Gold Potatoes','1 Red Sweet Potato']}},
-  {id:10, name:'Chicken Meal Prep Bowls', cat:'batch', emoji:'🥗', cost:15, time:'30 min',
-   ing:{Salads:['Fresh Express Caesar Salad Kit','Fresh Express SW Salad Kit'], Meat:['2 lb Chicken Breast'], Dairy:['Lucerne Greek Yogurt Plain 32oz']}},
-  {id:11, name:'Kale & Carrot Grain Bowls', cat:'healthy', emoji:'🥬', cost:10, time:'25 min',
-   ing:{Produce:['Cal-Organic Kale 2 bunches','2 Carrots','2 Shallots'], Pantry:['Signature SELECT Cannellini Beans','Signature SELECT Bread Crumbs'], Dairy:['Lucerne Greek Yogurt Plain']}},
-  {id:12, name:'Broccoli & Chicken Stir Fry', cat:'healthy', emoji:'🥦', cost:12, time:'25 min',
-   ing:{Vegetables:['Broccoli Florets Family Pack 24oz'], Meat:['1.5 lb Chicken Breast'], Produce:['2 Shallots','1 Red Bell Pepper'], Pantry:['Signature SELECT Black Beans']}},
+var meals=[
+  {id:1,name:'Chicken Tacos',cat:'mexican',emoji:'🌮',cost:14,time:'25 min',spicy:true,ing:{Produce:['3 on-the-vine tomatoes','2 avocados','1 bunch cilantro','2 limes'],Meat:['1.5 lb chicken breast'],Pantry:['McCormick taco seasoning','Herdez salsa verde','Rosarita refried beans','Signature SELECT black beans'],Bread:['La Comadre flour tortillas']}},
+  {id:2,name:'Chicken Burrito Bowls',cat:'mexican',emoji:'🫙',cost:13,time:'25 min',spicy:true,ing:{Produce:['2 avocados','1 bunch cilantro','1 lime','1 red bell pepper'],Meat:['1.5 lb chicken breast'],Pantry:['McCormick taco seasoning','Herdez salsa verde','Rosarita refried beans','Signature SELECT black beans'],Vegetables:['Baby gold potatoes']}},
+  {id:3,name:'Chicken Quesadillas',cat:'mexican',emoji:'🧀',cost:11,time:'20 min',spicy:false,ing:{Meat:['Open Nature chicken sausage 12oz'],Dairy:['Lucerne Colby Jack slices','Lucerne mozzarella 8oz'],Bread:['Mission white corn tortillas'],Pantry:['Herdez salsa verde'],Produce:['1 red bell pepper','1 avocado']}},
+  {id:4,name:'Black Bean Tostadas',cat:'mexican',emoji:'🫓',cost:9,time:'20 min',spicy:true,ing:{Pantry:['Signature SELECT black beans','Rosarita refried beans'],Produce:['2 avocados','2 limes','1 bunch cilantro','2 on-the-vine tomatoes'],Dairy:['Lucerne Colby Jack slices'],Bread:['Mission white corn tortillas']}},
+  {id:5,name:'Black Bean Soup',cat:'mexican',emoji:'🥣',cost:8,time:'25 min',spicy:true,ing:{Pantry:['Signature SELECT black beans x2','Chicken broth','Cumin','Garlic'],Produce:['1 red bell pepper','1 bunch cilantro','1 lime','2 shallots'],Dairy:['Lucerne Greek yogurt plain (topping)']}},
+  {id:6,name:'Spaghetti & Meat Sauce',cat:'italian',emoji:'🍝',cost:10,time:'25 min',spicy:false,ing:{Pantry:['Barilla spaghetti 16oz','Signature SELECT pasta sauce garlic basil'],Meat:['Signature SELECT turkey pepperoni'],Dairy:['Lucerne mozzarella 8oz']}},
+  {id:7,name:'Flatbread Pizza Night',cat:'italian',emoji:'🍕',cost:9,time:'20 min',spicy:false,ing:{Bread:['Signature SELECT garlic flatbread naan'],Pantry:['Signature SELECT pizza sauce'],Meat:['Signature SELECT turkey pepperoni'],Dairy:['Lucerne mozzarella 8oz']}},
+  {id:8,name:'Fusilli with Zucchini & Kale',cat:'italian',emoji:'🍃',cost:10,time:'25 min',spicy:false,ing:{Pantry:['De Cecco fusilli 16oz','Signature SELECT cannellini beans'],Produce:['2 zucchini','Cal-Organic kale 1 bunch','1 lemon'],Herbs:['Fresh sage 1 bunch','Fresh thyme 1 bunch']}},
+  {id:9,name:'Rigatoni Bake',cat:'italian',emoji:'🫙',cost:11,time:'30 min',spicy:false,ing:{Pantry:['Signature SELECT rigatoni 16oz','Signature SELECT pasta sauce garlic basil'],Dairy:['Lucerne mozzarella 8oz','Lucerne heavy whipping cream 16oz'],Produce:['2 zucchini','2 shallots']}},
+  {id:10,name:'Tuscan White Bean Soup',cat:'italian',emoji:'🫘',cost:9,time:'30 min',spicy:false,ing:{Pantry:['Signature SELECT cannellini beans','Signature SELECT pasta sauce'],Produce:['Cal-Organic kale 1 bunch','1 leek','4 shallots'],Herbs:['Fresh thyme','Fresh sage'],Dairy:['Lucerne heavy whipping cream']}},
+  {id:11,name:'Teriyaki Chicken Bowls',cat:'japanese',emoji:'🍱',cost:13,time:'25 min',spicy:false,ing:{Meat:['1.5 lb chicken breast'],Pantry:['Soy sauce','Signature SELECT honey','Rice vinegar','Garlic','Sesame oil'],Vegetables:['Broccoli florets family pack 24oz'],Grains:['Jasmine rice 2 lb bag']}},
+  {id:12,name:'Salmon & Edamame Bowls',cat:'japanese',emoji:'🐟',cost:15,time:'25 min',spicy:false,ing:{Meat:['Salmon fillet 1 lb'],Pantry:['Soy sauce','Rice vinegar','Sesame oil','Signature SELECT honey'],Produce:['2 avocados','1 lime','2 shallots'],Frozen:['Shelled edamame 12oz'],Grains:['Jasmine rice 2 lb bag']}},
+  {id:13,name:'Chicken Fried Rice',cat:'japanese',emoji:'🍳',cost:10,time:'25 min',spicy:false,ing:{Meat:['1 lb chicken breast diced'],Dairy:['Lucerne Farms eggs (3 eggs)'],Pantry:['Soy sauce','Sesame oil','Garlic'],Produce:['3 shallots','2 carrots'],Vegetables:['Broccoli florets'],Grains:['Jasmine rice (day-old works best)']}},
+  {id:14,name:'Miso Glazed Chicken & Rice',cat:'japanese',emoji:'🍜',cost:12,time:'30 min',spicy:false,ing:{Meat:['1.5 lb chicken breast'],Pantry:['White miso paste','Soy sauce','Rice vinegar','Signature SELECT honey','Sesame oil'],Produce:['2 shallots'],Vegetables:['Broccoli florets family pack'],Grains:['Jasmine rice 2 lb bag']}},
+  {id:15,name:'Peanut Noodle Bowls',cat:'thai',emoji:'🥜',cost:11,time:'20 min',spicy:true,ing:{Pantry:['Peanut butter','Soy sauce','Rice vinegar','Signature SELECT honey','Sesame oil','Garlic'],Produce:['2 carrots','1 red bell pepper','1 bunch cilantro','1 lime'],Grains:['Rice noodles 14oz'],Meat:['1 lb chicken breast (optional)']}},
+  {id:16,name:'Coconut Curry Chicken',cat:'thai',emoji:'🍛',cost:13,time:'30 min',spicy:true,ing:{Meat:['1.5 lb chicken breast'],Pantry:['Coconut milk 13.5oz','Mild green curry paste','Soy sauce','Garlic'],Produce:['1 red bell pepper','1 yellow bell pepper','1 bunch cilantro','1 lime'],Grains:['Jasmine rice 2 lb bag']}},
+  {id:17,name:'Thai Basil Chicken',cat:'thai',emoji:'🌿',cost:12,time:'20 min',spicy:true,ing:{Meat:['1.5 lb ground or diced chicken'],Pantry:['Soy sauce','Oyster sauce','Sesame oil','Garlic'],Produce:['1 red bell pepper','3 shallots','1 bunch fresh basil'],Grains:['Jasmine rice 2 lb bag']}},
+  {id:18,name:'Butter Chicken (shortcut)',cat:'indian',emoji:'🫕',cost:13,time:'30 min',spicy:true,ing:{Meat:['1.5 lb chicken breast'],Pantry:['Tomato sauce 15oz','Coconut milk 13.5oz','Garam masala','Cumin','Garlic','Ginger'],Dairy:['Lucerne heavy whipping cream'],Grains:['Jasmine rice 2 lb bag'],Bread:['Signature SELECT garlic flatbread naan']}},
+  {id:19,name:'Red Lentil Dal',cat:'indian',emoji:'🥘',cost:8,time:'30 min',spicy:true,ing:{Pantry:['Red lentils 1 lb','Coconut milk 13.5oz','Tomato sauce 15oz','Cumin','Turmeric','Garlic','Ginger'],Produce:['3 shallots','1 bunch cilantro','1 lime'],Grains:['Jasmine rice 2 lb bag']}},
+  {id:20,name:'Chickpea Tikka Masala',cat:'indian',emoji:'🫘',cost:9,time:'30 min',spicy:true,ing:{Pantry:['Chickpeas 15oz x2','Tomato sauce 15oz','Coconut milk 13.5oz','Garam masala','Cumin','Garlic','Ginger'],Produce:['3 shallots','1 bunch cilantro','1 lime'],Grains:['Jasmine rice 2 lb bag']}},
+  {id:21,name:'Greek Chicken Bowls',cat:'mediterranean',emoji:'🫙',cost:13,time:'25 min',spicy:false,ing:{Meat:['1.5 lb chicken breast'],Pantry:['Olive oil','Dried oregano','Garlic','O Organics hummus'],Produce:['O Organics romaine hearts','2 on-the-vine tomatoes','1 cucumber','1 lemon'],Dairy:['Feta cheese crumbled 4oz']}},
+  {id:22,name:'Hummus Flatbread Plate',cat:'mediterranean',emoji:'🫓',cost:8,time:'10 min',spicy:false,ing:{Pantry:['O Organics hummus'],Bread:['Signature SELECT garlic flatbread naan'],Produce:['O Organics romaine hearts','2 on-the-vine tomatoes','1 cucumber','1 lemon'],Snacks:['Open Nature pita chips']}},
+  {id:23,name:'Lemon Herb Salmon',cat:'mediterranean',emoji:'🐟',cost:15,time:'25 min',spicy:false,ing:{Meat:['Salmon fillet 1 lb'],Produce:['2 lemons','Cal-Organic kale 1 bunch','2 shallots'],Herbs:['Fresh thyme','Fresh sage'],Vegetables:['Broccoli florets family pack']}},
+  {id:24,name:'Stuffed Pepper Bowls',cat:'mediterranean',emoji:'🫑',cost:12,time:'30 min',spicy:false,ing:{Produce:['2 red bell peppers','2 yellow bell peppers','2 shallots','3 on-the-vine tomatoes'],Meat:['1 lb ground turkey or chicken'],Pantry:['Signature SELECT black beans','Olive oil','Garlic','Dried oregano'],Dairy:['Lucerne mozzarella 8oz']}},
+  {id:25,name:'Ginger Soy Stir Fry',cat:'chinese',emoji:'🥢',cost:12,time:'20 min',spicy:true,ing:{Meat:['1.5 lb chicken breast'],Pantry:['Soy sauce','Sesame oil','Fresh ginger','Garlic','Cornstarch'],Produce:['1 red bell pepper','2 carrots','2 shallots'],Vegetables:['Broccoli florets family pack'],Grains:['Jasmine rice 2 lb bag']}},
+  {id:26,name:'Honey Garlic Chicken',cat:'chinese',emoji:'🍯',cost:11,time:'25 min',spicy:false,ing:{Meat:['1.5 lb chicken breast'],Pantry:['Soy sauce','Signature SELECT honey','Garlic','Sesame oil','Cornstarch'],Produce:['2 shallots','2 carrots'],Vegetables:['Broccoli florets family pack'],Grains:['Jasmine rice 2 lb bag']}},
+  {id:27,name:'Sesame Noodles with Veggies',cat:'chinese',emoji:'🍜',cost:9,time:'20 min',spicy:true,ing:{Pantry:['Soy sauce','Sesame oil','Peanut butter','Rice vinegar','Signature SELECT honey'],Produce:['2 carrots','1 red bell pepper','2 shallots','1 bunch cilantro'],Grains:['Rice noodles 14oz']}},
+  {id:28,name:'Turkey Burger Lettuce Wraps',cat:'american',emoji:'🥬',cost:12,time:'20 min',spicy:false,ing:{Meat:['1 lb ground turkey'],Produce:['O Organics romaine hearts','2 on-the-vine tomatoes','1 avocado'],Dairy:['Lucerne Colby Jack slices'],Pantry:['Signature SELECT bread crumbs','Garlic','Olive oil']}},
+  {id:29,name:'Chicken & Broccoli Rice Bowl',cat:'american',emoji:'🥦',cost:12,time:'25 min',spicy:false,ing:{Meat:['1.5 lb chicken breast'],Vegetables:['Broccoli florets family pack 24oz'],Pantry:['Olive oil','Garlic','Soy sauce'],Grains:['Jasmine rice 2 lb bag'],Dairy:['Lucerne Colby Jack slices']}},
+  {id:30,name:'Sheet Pan Chicken Sausage',cat:'american',emoji:'🍳',cost:11,time:'30 min',spicy:false,ing:{Produce:['1 yellow bell pepper','1 red bell pepper','2 carrots'],Meat:['Open Nature chicken sausage 12oz'],Vegetables:['Baby gold potatoes 1.5 lb','1 red sweet potato']}},
+  {id:31,name:'Chicken Meal Prep Bowls',cat:'american',emoji:'🥗',cost:15,time:'30 min',spicy:false,ing:{Salads:['Fresh Express Caesar salad kit','Fresh Express SW Greek yogurt salad kit'],Meat:['2 lb chicken breast'],Dairy:['Lucerne Greek yogurt plain 32oz']}},
+  {id:32,name:'Kale & Carrot Grain Bowls',cat:'healthy',emoji:'🥬',cost:10,time:'25 min',spicy:false,ing:{Produce:['Cal-Organic kale 2 bunches','2 carrots','2 shallots'],Pantry:['Signature SELECT cannellini beans','Signature SELECT bread crumbs','Olive oil','Garlic'],Dairy:['Lucerne Greek yogurt plain (dressing)']}},
+  {id:33,name:'Broccoli & Chicken Stir Fry',cat:'healthy',emoji:'🥦',cost:12,time:'25 min',spicy:true,ing:{Vegetables:['Broccoli florets family pack 24oz'],Meat:['1.5 lb chicken breast'],Produce:['2 shallots','1 red bell pepper'],Pantry:['Soy sauce','Sesame oil','Garlic'],Grains:['Jasmine rice 2 lb bag']}},
+  {id:34,name:'Sweet Potato & Chicken Bake',cat:'healthy',emoji:'🍠',cost:12,time:'30 min',spicy:false,ing:{Produce:['2 red sweet potato/yam','2 avocados','1 lime'],Meat:['Open Nature chicken sausage 12oz'],Herbs:['Fresh thyme'],Pantry:['Olive oil','Garlic']}},
 ];
 
-var breakfasts = [
-  {id:'b1', name:'Greek Yogurt & Mandarins', cost:6, detail:'Lucerne yogurt + clementines', emoji:'🫙',
-   ing:{Dairy:['Lucerne Greek Yogurt Nonfat Plain 32oz'], 'Toddler Snacks':['Mandarins Clementine 3lb bag']}},
-  {id:'b2', name:'Hash Browns & Eggs', cost:7, detail:'Sig SELECT hash browns + eggs', emoji:'🍳',
-   ing:{Frozen:['Signature SELECT Hash Brown Patties 10ct'], Dairy:['Lucerne Farms Eggs 18ct']}},
-  {id:'b3', name:'English Muffin & Eggs', cost:6, detail:'Sourdough muffins + eggs + cheese', emoji:'🥚',
-   ing:{Bread:['Signature SELECT English Muffins Sourdough'], Dairy:['Lucerne Farms Eggs 18ct','Lucerne Colby Jack Cheese Slices']}},
-  {id:'b4', name:'Banana & Honey Toast', cost:5, detail:'Sig SELECT honey + bananas', emoji:'🍌',
-   ing:{Produce:['Bananas'], Pantry:['Signature SELECT Honey Clover'], Bread:['Bread/Toast']}},
-  {id:'b5', name:'Vanilla Yogurt & Apples', cost:6, detail:'Lucerne vanilla yogurt + honeycrisp', emoji:'🍎',
-   ing:{Dairy:['Lucerne Greek Yogurt Nonfat Vanilla 32oz'], 'Toddler Snacks':['Honeycrisp Apples 2lb bag']}},
-  {id:'b6', name:'Kale Scramble Wrap', cost:8, detail:'Kale + eggs + Ole wrap', emoji:'🌯',
-   ing:{Produce:['Cal-Organic Kale','2 Shallots'], Bread:['Ole Xtreme Wellness Tortilla Wraps'], Dairy:['Lucerne Farms Eggs 18ct']}},
+var breakfasts=[
+  {id:'b1',name:'Greek Yogurt & Mandarins',cost:6,detail:'Lucerne yogurt + clementines',emoji:'🫙',ing:{Dairy:['Lucerne Greek yogurt nonfat plain 32oz'],'Toddler Snacks':['Mandarins clementine 3lb bag']}},
+  {id:'b2',name:'Hash Browns & Eggs',cost:7,detail:'Sig SELECT hash browns + eggs',emoji:'🍳',ing:{Frozen:['Signature SELECT hash brown patties 10ct'],Dairy:['Lucerne Farms eggs 18ct']}},
+  {id:'b3',name:'English Muffin & Eggs',cost:6,detail:'Sourdough muffins + eggs + cheese',emoji:'🥚',ing:{Bread:['Signature SELECT English muffins sourdough 6ct'],Dairy:['Lucerne Farms eggs 18ct','Lucerne Colby Jack slices']}},
+  {id:'b4',name:'Banana & Honey Toast',cost:5,detail:'Sig SELECT honey + bananas',emoji:'🍌',ing:{Produce:['Bananas'],Pantry:['Signature SELECT honey clover'],Bread:['Bread or toast']}},
+  {id:'b5',name:'Vanilla Yogurt & Apples',cost:6,detail:'Lucerne vanilla yogurt + honeycrisp',emoji:'🍎',ing:{Dairy:['Lucerne Greek yogurt nonfat vanilla 32oz'],'Toddler Snacks':['Honeycrisp apples 2lb bag']}},
+  {id:'b6',name:'Kale Scramble Wrap',cost:8,detail:'Kale + eggs + Ole wrap',emoji:'🌯',ing:{Produce:['Cal-Organic kale','2 shallots'],Bread:['Ole Xtreme Wellness tortilla wraps'],Dairy:['Lucerne Farms eggs 18ct']}},
+  {id:'b7',name:'Avocado Egg Toast',cost:7,detail:'Avo + eggs on sourdough muffin',emoji:'🥑',ing:{Produce:['2 avocados','1 lemon'],Bread:['Signature SELECT English muffins sourdough'],Dairy:['Lucerne Farms eggs 18ct']}},
 ];
 
-var stockItems = [
-  {id:'s1', name:'Chicken Breast', cat:'Meat'},
-  {id:'s2', name:'Lucerne Eggs Cage Free 18ct', cat:'Dairy'},
-  {id:'s3', name:'Lucerne Greek Yogurt Plain', cat:'Dairy'},
-  {id:'s4', name:'Lucerne Greek Yogurt Vanilla', cat:'Dairy'},
-  {id:'s5', name:'Lucerne Mozzarella', cat:'Dairy'},
-  {id:'s6', name:'Lucerne Colby Jack Slices', cat:'Dairy'},
-  {id:'s7', name:'O Organics Milk 2%', cat:'Dairy'},
-  {id:'s8', name:'Chobani Coffee Creamer', cat:'Dairy'},
-  {id:'s9', name:'Barilla Spaghetti', cat:'Pantry'},
-  {id:'s10', name:'De Cecco Fusilli', cat:'Pantry'},
-  {id:'s11', name:'Signature SELECT Rigatoni', cat:'Pantry'},
-  {id:'s12', name:'Herdez Salsa Verde', cat:'Pantry'},
-  {id:'s13', name:'McCormick Taco Seasoning', cat:'Pantry'},
-  {id:'s14', name:'Rosarita Refried Beans', cat:'Pantry'},
-  {id:'s15', name:'Signature SELECT Black Beans', cat:'Pantry'},
-  {id:'s16', name:'Signature SELECT Cannellini Beans', cat:'Pantry'},
-  {id:'s17', name:'Signature SELECT Pizza Sauce', cat:'Pantry'},
-  {id:'s18', name:'Signature SELECT Pasta Sauce', cat:'Pantry'},
-  {id:'s19', name:'Signature SELECT Honey', cat:'Pantry'},
-  {id:'s20', name:'Snack Factory Pretzel Crisps', cat:'Snacks'},
-  {id:'s21', name:"Juantonio's Tortilla Chips", cat:'Snacks'},
-  {id:'s22', name:'Open Nature Pita Chips', cat:'Snacks'},
-  {id:'s23', name:"Smucker's Uncrustables", cat:'Toddler Snacks'},
-  {id:'s24', name:"Annie's Mac & Cheese", cat:'Toddler Snacks'},
-  {id:'s25', name:'Mandarins / Clementines', cat:'Toddler Snacks'},
-  {id:'s26', name:'Honeycrisp Apples', cat:'Toddler Snacks'},
-  {id:'s27', name:'Avocados', cat:'Produce'},
-  {id:'s28', name:'Bananas', cat:'Produce'},
-  {id:'s29', name:'Garlic Flatbread Naan', cat:'Bread'},
-  {id:'s30', name:'Mission White Corn Tortillas', cat:'Bread'},
-  {id:'s31', name:'Ole Tortilla Wraps', cat:'Bread'},
-  {id:'s32', name:'Signature SELECT English Muffins', cat:'Bread'},
-  {id:'s33', name:'Hash Brown Patties', cat:'Frozen'},
-  {id:'s34', name:'O Organics Hummus', cat:'Pantry'},
-  {id:'s35', name:'Broccoli Florets', cat:'Vegetables'},
+var stockItems=[
+  {id:'s1',name:'Chicken Breast',cat:'Meat'},{id:'s2',name:'Lucerne Eggs Cage Free 18ct',cat:'Dairy'},
+  {id:'s3',name:'Lucerne Greek Yogurt Plain',cat:'Dairy'},{id:'s4',name:'Lucerne Greek Yogurt Vanilla',cat:'Dairy'},
+  {id:'s5',name:'Lucerne Mozzarella',cat:'Dairy'},{id:'s6',name:'Lucerne Colby Jack Slices',cat:'Dairy'},
+  {id:'s7',name:'O Organics Milk 2%',cat:'Dairy'},{id:'s8',name:'Chobani Coffee Creamer',cat:'Dairy'},
+  {id:'s9',name:'Barilla Spaghetti',cat:'Pantry'},{id:'s10',name:'De Cecco Fusilli',cat:'Pantry'},
+  {id:'s11',name:'Signature SELECT Rigatoni',cat:'Pantry'},{id:'s12',name:'Jasmine Rice',cat:'Grains'},
+  {id:'s13',name:'Rice Noodles',cat:'Grains'},{id:'s14',name:'Herdez Salsa Verde',cat:'Pantry'},
+  {id:'s15',name:'McCormick Taco Seasoning',cat:'Pantry'},{id:'s16',name:'Rosarita Refried Beans',cat:'Pantry'},
+  {id:'s17',name:'Signature SELECT Black Beans',cat:'Pantry'},{id:'s18',name:'Signature SELECT Cannellini Beans',cat:'Pantry'},
+  {id:'s19',name:'Signature SELECT Pizza Sauce',cat:'Pantry'},{id:'s20',name:'Signature SELECT Pasta Sauce',cat:'Pantry'},
+  {id:'s21',name:'Signature SELECT Honey',cat:'Pantry'},{id:'s22',name:'Soy Sauce',cat:'Pantry'},
+  {id:'s23',name:'Sesame Oil',cat:'Pantry'},{id:'s24',name:'Coconut Milk',cat:'Pantry'},
+  {id:'s25',name:'Peanut Butter',cat:'Pantry'},{id:'s26',name:'O Organics Hummus',cat:'Pantry'},
+  {id:'s27',name:'Snack Factory Pretzel Crisps',cat:'Snacks'},{id:'s28',name:"Juantonio's Tortilla Chips",cat:'Snacks'},
+  {id:'s29',name:'Open Nature Pita Chips',cat:'Snacks'},{id:'s30',name:"Smucker's Uncrustables",cat:'Toddler Snacks'},
+  {id:'s31',name:"Annie's Mac & Cheese",cat:'Toddler Snacks'},{id:'s32',name:'Mandarins / Clementines',cat:'Toddler Snacks'},
+  {id:'s33',name:'Honeycrisp Apples',cat:'Toddler Snacks'},{id:'s34',name:'Avocados',cat:'Produce'},
+  {id:'s35',name:'Bananas',cat:'Produce'},{id:'s36',name:'Garlic Flatbread Naan',cat:'Bread'},
+  {id:'s37',name:'Mission White Corn Tortillas',cat:'Bread'},{id:'s38',name:'Ole Tortilla Wraps',cat:'Bread'},
+  {id:'s39',name:'Signature SELECT English Muffins',cat:'Bread'},{id:'s40',name:'Hash Brown Patties',cat:'Frozen'},
+  {id:'s41',name:'Edamame Shelled',cat:'Frozen'},{id:'s42',name:'Broccoli Florets',cat:'Vegetables'},
 ];
 
-// State
-var dayMeals = {Monday:null, Tuesday:null, Wednesday:null, Thursday:null, Friday:null};
-var openDay = null;
-var selBreakfast = null;
-var flagged = {};
+var cuisines=['all','mexican','italian','japanese','thai','indian','mediterranean','chinese','american','healthy'];
+var cuisineLabels={all:'🍽 All',mexican:'🌮 Mexican',italian:'🍝 Italian',japanese:'🍱 Japanese',thai:'🥜 Thai',indian:'🫕 Indian',mediterranean:'🫙 Mediter.',chinese:'🥢 Chinese',american:'🇺🇸 American',healthy:'🥬 Healthy'};
+var dayMeals={Monday:null,Tuesday:null,Wednesday:null,Thursday:null,Friday:null};
+var openDay=null,selBreakfast=null,flagged={};
 
-// Navigation
-function goPage(id, el) {
-  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
-  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
-  document.getElementById('page-' + id).classList.add('active');
+function goPage(id,el){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById('page-'+id).classList.add('active');
   el.classList.add('active');
-  if (id === 'grocery') renderGrocery();
-  if (id === 'stock') renderStock();
+  if(id==='grocery') renderGrocery();
+  if(id==='stock') renderStock();
 }
 
-// Budget
-function totalCost() {
-  var c = 0;
-  DAYS.forEach(function(d){ if (dayMeals[d]) c += dayMeals[d].cost; });
-  if (selBreakfast) c += selBreakfast.cost * 2;
+function totalCost(){
+  var c=0;
+  DAYS.forEach(function(d){if(dayMeals[d]) c+=dayMeals[d].cost;});
+  if(selBreakfast) c+=selBreakfast.cost*2;
   return c;
 }
 
-function updateBudget() {
-  var cost = totalCost();
-  var pct = Math.min(100, (cost / BUDGET) * 100);
-  document.getElementById('bAmt').innerHTML = '$' + cost + ' <small>/ $' + BUDGET + '</small>';
-  var f = document.getElementById('bFill');
-  f.style.width = pct + '%';
-  f.className = 'budget-fill' + (pct >= 100 ? ' over' : pct >= 80 ? ' warn' : '');
+function updateBudget(){
+  var cost=totalCost(),pct=Math.min(100,(cost/BUDGET)*100);
+  document.getElementById('bAmt').innerHTML='$'+cost+' <small>/ $'+BUDGET+'</small>';
+  var f=document.getElementById('bFill');
+  f.style.width=pct+'%';
+  f.className='budget-fill'+(pct>=100?' over':pct>=80?' warn':'');
 }
 
-// Render Plan
-function renderPlan() {
+function buildRecipeHTML(m){
+  var html='<div class="recipe-header">📋 '+m.emoji+' '+m.name+' — Ingredients</div>';
+  Object.keys(m.ing).forEach(function(cat){
+    html+='<div class="recipe-section"><div class="recipe-cat-label">'+cat+'</div><div class="recipe-tags">';
+    m.ing[cat].forEach(function(item){html+='<span class="rtag">'+item+'</span>';});
+    html+='</div></div>';
+  });
+  return html;
+}
+
+function renderPlan(){
   updateBudget();
+  var html='';
+  cuisines.forEach(function(c){html+='<div class="ctag'+(activeCuisine===c?' active':'')+'" data-cuisine="'+c+'">'+cuisineLabels[c]+'</div>';});
+  document.getElementById('cuisineFilter').innerHTML=html;
 
-  var dHtml = '';
-  DAYS.forEach(function(day) {
-    var meal = dayMeals[day];
-    var isOpen = openDay === day;
-    var chips = '';
-    meals.forEach(function(m) {
-      var isSel = meal && meal.id === m.id;
-      chips += '<div class="chip ' + m.cat + (isSel ? ' sel' : '') + '" data-day="' + day + '" data-mid="' + m.id + '">' +
-        m.emoji + ' ' + m.name + ' <span style="opacity:0.55;font-size:10px">$' + m.cost + ' · ' + m.time + '</span></div>';
+  var filtered=activeCuisine==='all'?meals:meals.filter(function(m){return m.cat===activeCuisine;});
+  var dHtml='';
+  DAYS.forEach(function(day){
+    var meal=dayMeals[day],isOpen=openDay===day;
+    var chips='';
+    filtered.forEach(function(m){
+      var isSel=meal&&meal.id===m.id;
+      var rkey=day+'-'+m.id;
+      var rOpen=openRecipe===rkey;
+      chips+=
+        '<div class="chip '+m.cat+(isSel?' sel':'')+'" data-day="'+day+'" data-mid="'+m.id+'">'+
+          '<div class="chip-left"><span>'+m.emoji+'</span><span class="chip-name">'+m.name+'</span>'+(m.spicy?'<span class="spicy-note">🌶️</span>':'')+' </div>'+
+          '<div class="chip-right"><span class="chip-meta">$'+m.cost+' · '+m.time+'</span><span class="expand-icon" data-rkey="'+rkey+'">'+(rOpen?'▲':'▼')+'</span></div>'+
+        '</div>'+
+        '<div class="recipe-panel'+(rOpen?' open':'')+'">'+
+          buildRecipeHTML(m)+
+          '<div class="recipe-actions">'+
+            '<button class="btn-pick" data-pday="'+day+'" data-pmid="'+m.id+'">✓ Add to '+day+'</button>'+
+            '<button class="btn-close" data-rkey="'+rkey+'">Close</button>'+
+          '</div>'+
+        '</div>';
     });
-    if (meal) chips += '<button class="clear-btn" data-clear="' + day + '">✕ Clear ' + day + '</button>';
-    dHtml +=
-      '<div class="day-card' + (meal ? ' picked' : '') + '">' +
-        '<div class="day-hd" data-tog="' + day + '">' +
-          '<div class="day-name">' + day + '</div>' +
-          '<div class="day-meal' + (meal ? ' set' : '') + '">' + (meal ? meal.emoji + ' ' + meal.name : 'tap to pick') + '</div>' +
-          '<div class="day-cost' + (meal ? ' set' : '') + '">' + (meal ? '$' + meal.cost : '') + '</div>' +
-        '</div>' +
-        '<div class="picker' + (isOpen ? ' open' : '') + '">' + chips + '</div>' +
+    if(meal) chips+='<button class="clear-btn" data-clear="'+day+'">✕ Clear '+day+'</button>';
+    dHtml+=
+      '<div class="day-card'+(meal?' picked':'')+'">'+
+        '<div class="day-hd" data-tog="'+day+'">'+
+          '<div class="day-name">'+day+'</div>'+
+          '<div class="day-meal'+(meal?' set':'')+'">'+( meal?meal.emoji+' '+meal.name:'tap to pick')+'</div>'+
+          '<div class="day-cost'+(meal?' set':'')+'">'+( meal?'$'+meal.cost:'')+'</div>'+
+        '</div>'+
+        '<div class="picker'+(isOpen?' open':'')+'">'+chips+'</div>'+
       '</div>';
   });
-  document.getElementById('dinnerDays').innerHTML = dHtml;
+  document.getElementById('dinnerDays').innerHTML=dHtml;
 
-  var bHtml = '';
-  breakfasts.forEach(function(b) {
-    var isSel = selBreakfast && selBreakfast.id === b.id;
-    bHtml +=
-      '<div class="bfast-card' + (isSel ? ' sel' : '') + '" data-bid="' + b.id + '">' +
-        '<div class="bfast-icon">' + b.emoji + '</div>' +
-        '<div class="bfast-name">' + b.name + '</div>' +
-        '<div class="bfast-detail">' + b.detail + '</div>' +
-        '<div class="bfast-cost">~$' + b.cost + '/wk</div>' +
-      '</div>';
+  var bHtml='';
+  breakfasts.forEach(function(b){
+    var isSel=selBreakfast&&selBreakfast.id===b.id;
+    bHtml+='<div class="bfast-card'+(isSel?' sel':'')+'" data-bid="'+b.id+'"><div class="bfast-icon">'+b.emoji+'</div><div class="bfast-name">'+b.name+'</div><div class="bfast-detail">'+b.detail+'</div><div class="bfast-cost">~$'+b.cost+'/wk</div></div>';
   });
-  document.getElementById('bfastGrid').innerHTML = bHtml;
+  document.getElementById('bfastGrid').innerHTML=bHtml;
 }
 
-// Plan click handler
-document.getElementById('page-plan').addEventListener('click', function(e) {
-  var tog = e.target.closest('[data-tog]');
-  var chip = e.target.closest('[data-mid]');
-  var clr = e.target.closest('[data-clear]');
-  var bid = e.target.closest('[data-bid]');
+document.getElementById('page-plan').addEventListener('click',function(e){
+  var ctag=e.target.closest('[data-cuisine]');
+  var rkey=e.target.closest('[data-rkey]');
+  var pickBtn=e.target.closest('[data-pday]');
+  var chip=e.target.closest('[data-mid]');
+  var clr=e.target.closest('[data-clear]');
+  var tog=e.target.closest('[data-tog]');
+  var bid=e.target.closest('[data-bid]');
 
-  if (clr) {
-    dayMeals[clr.dataset.clear] = null;
-    openDay = null;
+  if(ctag){activeCuisine=ctag.dataset.cuisine;renderPlan();}
+  else if(pickBtn){
+    var mid=parseInt(pickBtn.dataset.pmid);
+    dayMeals[pickBtn.dataset.pday]=meals.find(function(m){return m.id===mid;});
+    openDay=null;openRecipe=null;renderPlan();
+  }
+  else if(rkey){
+    var k=rkey.dataset.rkey;
+    openRecipe=openRecipe===k?null:k;
     renderPlan();
-  } else if (chip) {
-    var mid = parseInt(chip.dataset.mid);
-    dayMeals[chip.dataset.day] = meals.find(function(m){ return m.id === mid; });
-    openDay = null;
+  }
+  else if(chip&&!e.target.closest('[data-rkey]')&&!e.target.closest('[data-pday]')){
+    var k2=chip.dataset.day+'-'+chip.dataset.mid;
+    openRecipe=openRecipe===k2?null:k2;
     renderPlan();
-  } else if (tog) {
-    openDay = openDay === tog.dataset.tog ? null : tog.dataset.tog;
-    renderPlan();
-  } else if (bid) {
-    var found = breakfasts.find(function(b){ return b.id === bid.dataset.bid; });
-    selBreakfast = (selBreakfast && selBreakfast.id === bid.dataset.bid) ? null : found;
+  }
+  else if(clr){dayMeals[clr.dataset.clear]=null;openDay=null;openRecipe=null;renderPlan();}
+  else if(tog){openDay=openDay===tog.dataset.tog?null:tog.dataset.tog;openRecipe=null;renderPlan();}
+  else if(bid){
+    var found=breakfasts.find(function(b){return b.id===bid.dataset.bid;});
+    selBreakfast=(selBreakfast&&selBreakfast.id===bid.dataset.bid)?null:found;
     renderPlan();
   }
 });
 
-// Grocery
-function buildIngr() {
-  var map = {};
-  function add(cat, items) {
-    if (!map[cat]) map[cat] = [];
-    items.forEach(function(i){ if (map[cat].indexOf(i) < 0) map[cat].push(i); });
-  }
-  DAYS.forEach(function(d){
-    var meal = dayMeals[d];
-    if (!meal) return;
-    Object.keys(meal.ing).forEach(function(cat){ add(cat, meal.ing[cat]); });
-  });
-  if (selBreakfast) Object.keys(selBreakfast.ing).forEach(function(cat){ add(cat, selBreakfast.ing[cat]); });
-  stockItems.forEach(function(s){
-    if (flagged[s.id]) add(s.cat, [s.name + ' ⚠️ (low stock)']);
-  });
+function buildIngr(){
+  var map={};
+  function add(cat,items){if(!map[cat])map[cat]=[];items.forEach(function(i){if(map[cat].indexOf(i)<0)map[cat].push(i);});}
+  DAYS.forEach(function(d){var meal=dayMeals[d];if(!meal)return;Object.keys(meal.ing).forEach(function(cat){add(cat,meal.ing[cat]);});});
+  if(selBreakfast)Object.keys(selBreakfast.ing).forEach(function(cat){add(cat,selBreakfast.ing[cat]);});
+  stockItems.forEach(function(s){if(flagged[s.id])add(s.cat,[s.name+' ⚠️ (low stock)']);});
   return map;
 }
 
-function renderGrocery() {
-  var map = buildIngr();
-  var cats = Object.keys(map);
-  var total = cats.reduce(function(s,c){ return s + map[c].length; }, 0);
-  document.getElementById('gCount').textContent = total + ' items';
-  document.getElementById('gCost').textContent = '$' + totalCost();
-
-  if (!cats.length) {
-    document.getElementById('grocList').innerHTML = '<div class="empty"><div style="font-size:32px;margin-bottom:10px">🛒</div>Pick meals on the Plan tab and your list appears here automatically.</div>';
-    return;
-  }
-  var html = '';
-  cats.forEach(function(cat) {
-    html += '<div class="ingr-block"><div class="ingr-hd"><span class="ingr-cat">' + cat + '</span><span class="ingr-ct">' + map[cat].length + ' items</span></div>';
-    map[cat].forEach(function(item){ html += '<div class="ingr-row"><div class="dot"></div><div>' + item + '</div></div>'; });
-    html += '</div>';
+function renderGrocery(){
+  var map=buildIngr(),cats=Object.keys(map);
+  var total=cats.reduce(function(s,c){return s+map[c].length;},0);
+  document.getElementById('gCount').textContent=total+' items';
+  document.getElementById('gCost').textContent='$'+totalCost();
+  if(!cats.length){document.getElementById('grocList').innerHTML='<div class="empty"><div style="font-size:32px;margin-bottom:10px">🛒</div>Pick meals on the Plan tab and your list appears here automatically.</div>';return;}
+  var html='';
+  cats.forEach(function(cat){
+    html+='<div class="ingr-block"><div class="ingr-hd"><span class="ingr-cat">'+cat+'</span><span class="ingr-ct">'+map[cat].length+' items</span></div>';
+    map[cat].forEach(function(item){html+='<div class="ingr-row"><div class="dot"></div><div>'+item+'</div></div>';});
+    html+='</div>';
   });
-  document.getElementById('grocList').innerHTML = html;
+  document.getElementById('grocList').innerHTML=html;
 }
 
-function copyGrocery() {
-  var map = buildIngr();
-  var lines = ['🛒 Weekly Grocery List', ''];
-  Object.keys(map).forEach(function(cat){
-    lines.push('── ' + cat + ' ──');
-    map[cat].forEach(function(i){ lines.push('  • ' + i); });
-    lines.push('');
-  });
-  lines.push('Est. budget: $' + totalCost() + ' / $' + BUDGET);
+function copyGrocery(){
+  var map=buildIngr(),lines=['🛒 Weekly Grocery List',''];
+  Object.keys(map).forEach(function(cat){lines.push('── '+cat+' ──');map[cat].forEach(function(i){lines.push('  • '+i);});lines.push('');});
+  lines.push('Est. budget: $'+totalCost()+' / $'+BUDGET);
   navigator.clipboard.writeText(lines.join('\n')).then(function(){
-    var btn = document.getElementById('copyBtn');
-    btn.textContent = '✓ Copied!';
-    btn.classList.add('done');
-    setTimeout(function(){ btn.textContent = '📋 Copy Grocery List'; btn.classList.remove('done'); }, 2000);
+    var btn=document.getElementById('copyBtn');btn.textContent='✓ Copied!';btn.classList.add('done');
+    setTimeout(function(){btn.textContent='📋 Copy Grocery List';btn.classList.remove('done');},2000);
   });
 }
 
-// Stock
-function renderStock() {
-  var fl = stockItems.filter(function(s){ return flagged[s.id]; });
-  var banner = document.getElementById('flagBanner');
-  if (fl.length) {
-    banner.textContent = '⚠️ ' + fl.length + ' item' + (fl.length > 1 ? 's' : '') + ' flagged — added to grocery list';
-    banner.classList.add('show');
-  } else {
-    banner.classList.remove('show');
-  }
-  var html = '';
+function renderStock(){
+  var fl=stockItems.filter(function(s){return flagged[s.id];});
+  var banner=document.getElementById('flagBanner');
+  if(fl.length){banner.textContent='⚠️ '+fl.length+' item'+(fl.length>1?'s':'')+' flagged — added to grocery list';banner.classList.add('show');}
+  else banner.classList.remove('show');
+  var html='';
   stockItems.forEach(function(s){
-    var f = flagged[s.id];
-    html += '<div class="stock-row' + (f ? ' flagged' : '') + '" data-sid="' + s.id + '">' +
-      '<div class="stock-icon">' + (f ? '⚠️' : '') + '</div>' +
-      '<div><div class="stock-name">' + s.name + '</div><div class="stock-sub">' + (f ? 'Flagged · added to list' : s.cat) + '</div></div>' +
-    '</div>';
+    var f=flagged[s.id];
+    html+='<div class="stock-row'+(f?' flagged':'')+'" data-sid="'+s.id+'"><div class="stock-icon">'+(f?'⚠️':'')+'</div><div><div class="stock-name">'+s.name+'</div><div class="stock-sub">'+(f?'Flagged · added to list':s.cat)+'</div></div></div>';
   });
-  document.getElementById('stockList').innerHTML = html;
+  document.getElementById('stockList').innerHTML=html;
 }
 
-document.getElementById('page-stock').addEventListener('click', function(e){
-  var row = e.target.closest('[data-sid]');
-  if (!row) return;
-  var id = row.dataset.sid;
-  flagged[id] = !flagged[id];
+document.getElementById('page-stock').addEventListener('click',function(e){
+  var row=e.target.closest('[data-sid]');
+  if(!row)return;
+  flagged[row.dataset.sid]=!flagged[row.dataset.sid];
   renderStock();
 });
 
-// Init
 renderPlan();
 </script>
 
