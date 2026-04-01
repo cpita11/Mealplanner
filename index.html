@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meal Planner</title>
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+:root {
+  --bg:#0f1a14; --card:#1c2b1e; --border:#2d4030;
+  --ink:#eef5ee; --soft:#8aab8e;
+  --accent:#7ec87a; --warn:#e8c06a; --danger:#e07060;
+}
+body {margin:0;font-family:sans-serif;background:var(--bg);color:var(--ink);}
+
+.container {padding:16px;max-width:500px;margin:auto;}
+
+h1 {font-size:22px;margin-bottom:10px;}
+button {padding:10px;border-radius:10px;border:none;margin:4px;}
+
+.card {
+  background:var(--card);
+  border:1px solid var(--border);
+  padding:12px;
+  border-radius:12px;
+  margin-bottom:10px;
+}
+
+.row {display:flex;justify-content:space-between;align-items:center;}
+
+.chip {
+  padding:6px 10px;
+  border:1px solid var(--border);
+  border-radius:20px;
+  margin:4px;
+  display:inline-block;
+  cursor:pointer;
+}
+
+.chip.sel {background:var(--accent);color:black;}
+
+.progress {
+  height:6px;background:var(--border);
+  border-radius:4px;margin-top:6px;
+}
+.bar {
+  height:100%;background:var(--accent);
+  border-radius:4px;
+}
+
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>🥗 Weekly Meals</h1>
+
+<div class="card">
+  <div class="row">
+    <div>Budget</div>
+    <div id="budgetText">$0 / $100</div>
+  </div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+</div>
+
+<div class="card">
+  <b>Dinners</b>
+  <div id="days"></div>
+</div>
+
+<div class="card">
+  <b>Breakfast</b>
+  <div id="breakfast"></div>
+</div>
+
+<div class="card">
+  <button onclick="resetWeek()">🔄 Reset Week</button>
+  <button onclick="repeatWeek()">♻️ Repeat Last Week</button>
+</div>
+
+</div>
+
+<script>
+const BUDGET = 100;
+const DAYS = ["Mon","Tue","Wed","Thu","Fri"];
+
+const meals = [
+  {id:1,name:"Tacos",cost:14},
+  {id:2,name:"Bowls",cost:13},
+  {id:3,name:"Quesadilla",cost:11},
+  {id:4,name:"Spaghetti",cost:10},
+  {id:5,name:"Pizza",cost:9}
+];
+
+const breakfasts = [
+  {id:"b1",name:"Yogurt",cost:6},
+  {id:"b2",name:"Eggs",cost:7},
+  {id:"b3",name:"Toast",cost:5}
+];
+
+let state = JSON.parse(localStorage.getItem("mealApp")) || {
+  days:{},
+  breakfast:null,
+  lastWeek:null
+};
+
+function save() {
+  localStorage.setItem("mealApp", JSON.stringify(state));
+}
+
+function total() {
+  let t=0;
+  Object.values(state.days).forEach(m=>{ if(m) t+=m.cost });
+  if(state.breakfast) t+=state.breakfast.cost*2;
+  return t;
+}
+
+function render() {
+  let dhtml="";
+  DAYS.forEach(d=>{
+    let m = state.days[d];
+    dhtml += `<div class="card">
+      <div>${d}: ${m?m.name:"-"}</div>
+      ${meals.map(me=>`
+        <span class="chip ${m&&m.id===me.id?"sel":""}"
+        onclick="pickMeal('${d}',${me.id})">${me.name}</span>
+      `).join("")}
+    </div>`;
+  });
+  document.getElementById("days").innerHTML = dhtml;
+
+  let bhtml = breakfasts.map(b=>`
+    <span class="chip ${state.breakfast&&state.breakfast.id===b.id?"sel":""}"
+    onclick="pickBreakfast('${b.id}')">${b.name}</span>
+  `).join("");
+  document.getElementById("breakfast").innerHTML = bhtml;
+
+  let cost = total();
+  document.getElementById("budgetText").innerText = `$${cost} / $${BUDGET}`;
+  document.getElementById("bar").style.width = Math.min(100, cost/BUDGET*100)+"%";
+
+  save();
+}
+
+function pickMeal(day,id){
+  state.days[day] = meals.find(m=>m.id===id);
+  render();
+}
+
+function pickBreakfast(id){
+  state.breakfast = breakfasts.find(b=>b.id===id);
+  render();
+}
+
+function resetWeek(){
+  state.lastWeek = JSON.parse(JSON.stringify(state));
+  state.days={};
+  state.breakfast=null;
+  render();
+}
+
+function repeatWeek(){
+  if(state.lastWeek){
+    state = JSON.parse(JSON.stringify(state.lastWeek));
+    render();
+  }
+}
+
+render();
+</script>
+
+</body>
+</html>
