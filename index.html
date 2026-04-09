@@ -1,408 +1,1851 @@
-<!DOCTYPE html>
+import { useState, useEffect } from “react”;
 
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Meal Plan 2">
-<title>Meal Plan 2</title>
-<style>
-:root{
-  --bg:#0f1a14;--bg2:#162010;--card:#1c2b1e;--border:#2d4030;
-  --ink:#eef5ee;--ink-soft:#8aab8e;--ink-faint:#3d5540;
-  --accent:#7ec87a;--accent-dark:#4a9446;--accent-glow:rgba(126,200,122,0.15);
-  --red:#e07060;--yellow:#e8c06a;--blue:#6aa8d8;--orange:#e8956a;
-  --purple:#b088d8;--pink:#e088a8;--teal:#68c8b8;
-  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overscroll-behavior:none;}
-.nav{position:sticky;top:0;z-index:200;background:var(--bg);border-bottom:1px solid var(--border);padding:calc(var(--safe-top)+10px) 16px 0;}
-.nav-title{font-size:20px;font-weight:700;letter-spacing:-0.3px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.nav-title em{color:var(--accent);font-style:normal;}
-.tabs{display:flex;}
-.tab{flex:1;text-align:center;padding:10px 4px;font-size:12px;font-weight:600;color:var(--ink-faint);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;user-select:none;}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.page{display:none;padding:16px 16px calc(var(--safe-bottom)+80px);}
-.page.active{display:block;}
-.budget-bar{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:16px;}
-.budget-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.budget-label{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:0.5px;text-transform:uppercase;}
-.budget-num{font-size:20px;font-weight:700;}
-.budget-num small{font-size:13px;color:var(--ink-soft);font-weight:400;}
-.budget-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
-.budget-fill{height:100%;border-radius:3px;background:var(--accent);transition:width 0.4s ease,background 0.3s;}
-.budget-fill.warn{background:var(--yellow);}
-.budget-fill.over{background:var(--red);}
-.sec-hd{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink-faint);margin:16px 0 10px;}
-.cuisine-scroll{overflow-x:auto;display:flex;gap:6px;margin-bottom:12px;padding-bottom:2px;scrollbar-width:none;}
-.cuisine-scroll::-webkit-scrollbar{display:none;}
-.ctag{white-space:nowrap;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--ink-soft);background:var(--bg2);user-select:none;transition:all 0.15s;}
-.ctag.active{background:var(--accent-glow);border-color:var(--accent);color:var(--accent);}
-.day-card{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.2s;}
-.day-card.picked{border-color:var(--accent-dark);}
-.day-hd{display:flex;align-items:center;padding:13px 14px;cursor:pointer;user-select:none;}
-.day-name{font-size:13px;font-weight:700;min-width:82px;}
-.day-meal{flex:1;font-size:12px;color:var(--ink-soft);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 8px;}
-.day-meal.set{color:var(--accent);}
-.day-cost{font-size:12px;font-weight:700;color:var(--ink-faint);min-width:34px;text-align:right;}
-.day-cost.set{color:var(--yellow);}
-.picker{border-top:1px solid var(--border);padding:10px;display:none;flex-direction:column;gap:6px;}
-.picker.open{display:flex;}
+const STORAGE_KEY = “mealplanner-v8-meals”;
+const WEEK_KEY = “mealplanner-v8-week”;
 
-/* CHIP */
-.chip{padding:10px 12px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(–border);color:var(–ink-soft);background:var(–bg2);user-select:none;transition:all 0.15s;display:flex;align-items:center;justify-content:space-between;}
-.chip-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0;}
-.chip-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.chip-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:8px;}
-.chip-meta{font-size:10px;opacity:0.6;white-space:nowrap;}
-.spicy-note{font-size:11px;}
-.expand-icon{font-size:10px;opacity:0.5;padding:2px 4px;}
-.chip.sel{background:var(–accent-glow);border-color:var(–accent);color:var(–accent);}
-.chip.mexican{border-color:#5a3a1a;}.chip.mexican.sel{background:rgba(232,149,106,0.15);border-color:var(–orange);color:var(–orange);}
-.chip.italian{border-color:#1a3a5a;}.chip.italian.sel{background:rgba(106,168,216,0.15);border-color:var(–blue);color:var(–blue);}
-.chip.japanese{border-color:#5a1a2a;}.chip.japanese.sel{background:rgba(224,136,168,0.15);border-color:var(–pink);color:var(–pink);}
-.chip.thai{border-color:#3a1a5a;}.chip.thai.sel{background:rgba(176,136,216,0.15);border-color:var(–purple);color:var(–purple);}
-.chip.indian{border-color:#5a3a1a;}.chip.indian.sel{background:rgba(232,192,106,0.15);border-color:var(–yellow);color:var(–yellow);}
-.chip.mediterranean{border-color:#1a5a4a;}.chip.mediterranean.sel{background:rgba(104,200,184,0.15);border-color:var(–teal);color:var(–teal);}
-.chip.american{border-color:#2a3a5a;}.chip.american.sel{background:rgba(106,168,216,0.15);border-color:var(–blue);color:var(–blue);}
-.chip.chinese{border-color:#5a1a1a;}.chip.chinese.sel{background:rgba(224,112,96,0.15);border-color:var(–red);color:var(–red);}
-.chip.healthy{border-color:#1a3a1a;}.chip.healthy.sel{background:rgba(126,200,122,0.15);border-color:var(–accent);color:var(–accent);}
+const DAYS = [“Monday”, “Tuesday”, “Wednesday”, “Thursday”, “Friday”, “Saturday”, “Sunday”];
 
-/* RECIPE PANEL */
-.recipe-panel{background:var(–bg);border:1px solid var(–border);border-radius:10px;overflow:hidden;display:none;margin-top:-4px;}
-.recipe-panel.open{display:block;}
-.recipe-header{padding:10px 12px 6px;font-size:12px;font-weight:700;color:var(–ink-soft);border-bottom:1px solid var(–border);}
-.recipe-section{padding:8px 12px;border-bottom:1px solid var(–border);}
-.recipe-section:last-of-type{border-bottom:none;}
-.recipe-cat-label{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(–ink-faint);margin-bottom:5px;}
-.recipe-tags{display:flex;flex-wrap:wrap;gap:4px;}
-.rtag{font-size:11px;background:var(–card);border:1px solid var(–border);border-radius:6px;padding:3px 8px;color:var(–ink-soft);}
-.recipe-actions{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(–border);}
-.btn-pick{flex:1;padding:10px;background:var(–accent);color:var(–bg);border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:-apple-system,sans-serif;}
-.btn-close{padding:10px 14px;background:transparent;color:var(–ink-faint);border:1px solid var(–border);border-radius:10px;font-size:13px;cursor:pointer;font-family:-apple-system,sans-serif;}
+// Ingredients are objects: { name: string, amount: string }
+// cuisine field: “American” | “Italian” | “Mexican” | “Asian” | “Mediterranean” | “Crock Pot”
+// All recipes sourced from tasty.co — scaled for family of 4 (2 adults, 2 toddlers)
+const DEFAULT_MEALS = [
+// ── AMERICAN ─────────────────────────────────────────────────────────────
+{
+id: “1”,
+name: “One-Pot Garlic Parmesan Chicken Pasta”,
+cuisine: “American”,
+time: 30,
+rating: 5,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://tasty.co/recipe/one-pot-garlic-parmesan-chicken-pasta”,
+ingredients: [
+{ name: “chicken breasts”, amount: “1.5 lbs, cubed” },
+{ name: “rotini pasta”, amount: “12 oz” },
+{ name: “chicken stock”, amount: “3 cups” },
+{ name: “heavy cream”, amount: “1 cup” },
+{ name: “cream cheese”, amount: “4 oz” },
+{ name: “garlic”, amount: “4 cloves, minced” },
+{ name: “parmesan cheese”, amount: “½ cup, grated” },
+{ name: “Italian seasoning”, amount: “1 tsp” },
+{ name: “avocado oil”, amount: “2 tbsp” },
+{ name: “salt & pepper”, amount: “to taste” },
+],
+notes: “Everything cooks in one pot. Cheesy and creamy — toddlers devour it.”,
+},
+{
+id: “2”,
+name: “BBQ Chicken Pasta Bake”,
+cuisine: “American”,
+time: 30,
+rating: 4,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://tasty.co/recipe/bbq-chicken-pasta-bake”,
+ingredients: [
+{ name: “penne pasta”, amount: “12 oz, cooked” },
+{ name: “rotisserie chicken”, amount: “2 cups, shredded” },
+{ name: “BBQ sauce”, amount: “1 cup” },
+{ name: “ranch dressing”, amount: “¼ cup” },
+{ name: “mozzarella cheese”, amount: “1½ cups, shredded” },
+{ name: “red onion”, amount: “½ small, diced” },
+{ name: “corn”, amount: “1 cup, drained” },
+],
+notes: “Store-bought BBQ & ranch make this a 10-min assembly. Bake 20 min.”,
+},
+{
+id: “3”,
+name: “Sheet Pan Salmon & Broccoli”,
+cuisine: “American”,
+time: 25,
+rating: 5,
+tags: [“healthy”, “budget”],
+recipeUrl: “https://tasty.co/recipe/sheet-pan-salmon-and-broccoli”,
+ingredients: [
+{ name: “salmon fillets”, amount: “4 (5 oz each)” },
+{ name: “broccoli florets”, amount: “4 cups” },
+{ name: “butter”, amount: “3 tbsp, melted” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “lemon”, amount: “1, sliced” },
+{ name: “olive oil”, amount: “2 tbsp” },
+{ name: “salt & pepper”, amount: “to taste” },
+],
+notes: “One pan, 25 min. Garlic butter salmon is mild enough for toddlers.”,
+},
+{
+id: “4”,
+name: “One-Pot Taco Spaghetti”,
+cuisine: “American”,
+time: 30,
+rating: 5,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://tasty.co/recipe/one-pot-taco-spaghetti”,
+ingredients: [
+{ name: “spaghetti”, amount: “12 oz” },
+{ name: “ground beef (lean)”, amount: “1 lb” },
+{ name: “taco seasoning (mild)”, amount: “1 packet” },
+{ name: “diced tomatoes”, amount: “14 oz can” },
+{ name: “chicken broth”, amount: “2 cups” },
+{ name: “shredded cheddar”, amount: “1 cup” },
+{ name: “sour cream”, amount: “¼ cup” },
+],
+notes: “Taco night meets pasta night in one pot. Ready in 30 min flat.”,
+},
+{
+id: “5”,
+name: “Easy Chicken Pot Pie (Biscuit Top)”,
+cuisine: “American”,
+time: 30,
+rating: 5,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://tasty.co/recipe/easy-chicken-pot-pie”,
+ingredients: [
+{ name: “rotisserie chicken”, amount: “2 cups, shredded” },
+{ name: “frozen mixed vegetables”, amount: “2 cups” },
+{ name: “cream of chicken soup”, amount: “1 can (10.5 oz)” },
+{ name: “chicken broth”, amount: “½ cup” },
+{ name: “store-bought biscuits”, amount: “1 can (8 count)” },
+{ name: “garlic powder”, amount: “½ tsp” },
+{ name: “onion powder”, amount: “½ tsp” },
+],
+notes: “Store-bought biscuits on top — dump, top, bake. Pure comfort food.”,
+},
+// ── ITALIAN ──────────────────────────────────────────────────────────────
+{
+id: “6”,
+name: “One-Pan Garlic Chicken Pesto Pasta”,
+cuisine: “Italian”,
+time: 30,
+rating: 5,
+tags: [“healthy”, “kid-friendly”],
+recipeUrl: “https://tasty.co/recipe/one-pan-garlic-chicken-pesto-pasta”,
+ingredients: [
+{ name: “chicken breasts”, amount: “1.5 lbs, sliced” },
+{ name: “penne pasta”, amount: “12 oz, cooked” },
+{ name: “pesto sauce”, amount: “⅓ cup” },
+{ name: “heavy cream”, amount: “½ cup” },
+{ name: “parmesan cheese”, amount: “⅓ cup, grated” },
+{ name: “cherry tomatoes”, amount: “1 cup, halved” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “olive oil”, amount: “2 tbsp” },
+],
+notes: “One skillet, 30 min. Pesto + cream = sauce kids love.”,
+},
+{
+id: “7”,
+name: “One-Pot Creamy Tuscan Pasta”,
+cuisine: “Italian”,
+time: 25,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://tasty.co/recipe/one-pot-creamy-tuscan-pasta”,
+ingredients: [
+{ name: “penne pasta”, amount: “12 oz” },
+{ name: “sun-dried tomatoes”, amount: “⅓ cup” },
+{ name: “baby spinach”, amount: “2 cups” },
+{ name: “heavy cream”, amount: “1 cup” },
+{ name: “parmesan cheese”, amount: “½ cup, grated” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “chicken broth”, amount: “2 cups” },
+{ name: “Italian seasoning”, amount: “1 tsp” },
+],
+notes: “Everything simmers in one pot — pasta absorbs the creamy sauce.”,
+},
+{
+id: “8”,
+name: “Sheet Pan Gnocchi with Cherry Tomatoes”,
+cuisine: “Italian”,
+time: 25,
+rating: 4,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://tasty.co/recipe/sheet-pan-gnocchi”,
+ingredients: [
+{ name: “store-bought gnocchi”, amount: “2 lbs” },
+{ name: “cherry tomatoes”, amount: “2 cups” },
+{ name: “olive oil”, amount: “3 tbsp” },
+{ name: “garlic”, amount: “4 cloves, minced” },
+{ name: “Italian seasoning”, amount: “1 tsp” },
+{ name: “parmesan cheese”, amount: “¼ cup, grated” },
+{ name: “fresh basil”, amount: “¼ cup” },
+],
+notes: “Toss everything on a pan and roast. Gnocchi gets crispy edges kids love.”,
+},
+// ── MEXICAN ──────────────────────────────────────────────────────────────
+{
+id: “9”,
+name: “One-Pot Easy Taco Soup”,
+cuisine: “Mexican”,
+time: 25,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://tasty.co/recipe/easy-taco-soup”,
+ingredients: [
+{ name: “ground beef (lean)”, amount: “1 lb” },
+{ name: “taco seasoning (mild)”, amount: “1 packet” },
+{ name: “black beans”, amount: “1 can (15 oz), drained” },
+{ name: “corn”, amount: “1 cup, frozen” },
+{ name: “diced tomatoes”, amount: “1 can (14 oz)” },
+{ name: “chicken broth”, amount: “2 cups” },
+{ name: “shredded cheese”, amount: “1 cup (topping)” },
+{ name: “sour cream”, amount: “¼ cup (topping)” },
+],
+notes: “One pot, under 30 min. Kids love customizing their toppings.”,
+},
+{
+id: “10”,
+name: “Easy Sheet Pan Chicken Fajitas”,
+cuisine: “Mexican”,
+time: 25,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://tasty.co/recipe/sheet-pan-chicken-fajitas”,
+ingredients: [
+{ name: “chicken breasts”, amount: “1.5 lbs, sliced” },
+{ name: “bell peppers (mixed colors)”, amount: “3, sliced” },
+{ name: “onion”, amount: “1 large, sliced” },
+{ name: “fajita seasoning (mild)”, amount: “2 tbsp” },
+{ name: “olive oil”, amount: “3 tbsp” },
+{ name: “flour tortillas”, amount: “8 medium” },
+{ name: “shredded cheese”, amount: “1 cup” },
+{ name: “sour cream”, amount: “¼ cup” },
+],
+notes: “One sheet pan — roast everything together. Zero fuss cleanup.”,
+},
+{
+id: “11”,
+name: “Slow Cooker Chicken & Veggie Tacos”,
+cuisine: “Mexican”,
+time: 10,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://tasty.co/recipe/slow-cooker-chicken-vegetable-tacos”,
+ingredients: [
+{ name: “chicken thighs, boneless”, amount: “2 lbs” },
+{ name: “taco seasoning (mild)”, amount: “1 packet” },
+{ name: “salsa (mild)”, amount: “1 cup” },
+{ name: “corn tortillas”, amount: “12 small” },
+{ name: “shredded cheese”, amount: “1 cup” },
+{ name: “avocado”, amount: “1, sliced” },
+{ name: “lime”, amount: “1, juiced” },
+],
+notes: “Dump in crock pot AM, shred at dinner. 10 min active prep.”,
+},
+// ── ASIAN ────────────────────────────────────────────────────────────────
+{
+id: “12”,
+name: “20-Minute Beef & Broccoli Noodle Stir-Fry”,
+cuisine: “Asian”,
+time: 20,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://tasty.co/recipe/20-minute-beef-and-broccoli-noodle-stir-fry”,
+ingredients: [
+{ name: “ramen noodles (plain)”, amount: “3 packs” },
+{ name: “ground beef (lean)”, amount: “1 lb” },
+{ name: “broccoli florets”, amount: “3 cups” },
+{ name: “soy sauce (low sodium)”, amount: “¼ cup” },
+{ name: “oyster sauce”, amount: “2 tbsp” },
+{ name: “sesame oil”, amount: “1 tsp” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “ginger (ground)”, amount: “½ tsp” },
+],
+notes: “Kids love ramen noodles. Done in 20 min — faster than takeout.”,
+},
+{
+id: “13”,
+name: “Teriyaki Chicken Rice Bowls”,
+cuisine: “Asian”,
+time: 25,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://tasty.co/recipe/teriyaki-chicken-rice-bowls”,
+ingredients: [
+{ name: “chicken thighs, boneless”, amount: “1.5 lbs” },
+{ name: “soy sauce (low sodium)”, amount: “¼ cup” },
+{ name: “honey”, amount: “3 tbsp” },
+{ name: “garlic”, amount: “2 cloves, minced” },
+{ name: “ginger (ground)”, amount: “½ tsp” },
+{ name: “white rice, cooked”, amount: “3 cups” },
+{ name: “broccoli, steamed”, amount: “2 cups” },
+{ name: “sesame seeds”, amount: “1 tsp (garnish)” },
+],
+notes: “Sweet teriyaki glaze kids love. Meal prep friendly — doubles easily.”,
+},
+// ── MEDITERRANEAN ────────────────────────────────────────────────────────
+{
+id: “14”,
+name: “Marry Me Chicken”,
+cuisine: “Mediterranean”,
+time: 30,
+rating: 5,
+tags: [“healthy”, “kid-friendly”],
+recipeUrl: “https://tasty.co/recipe/marry-me-chicken”,
+ingredients: [
+{ name: “chicken breasts”, amount: “4 medium” },
+{ name: “heavy cream”, amount: “¾ cup” },
+{ name: “chicken broth”, amount: “½ cup” },
+{ name: “sun-dried tomatoes”, amount: “⅓ cup” },
+{ name: “parmesan cheese”, amount: “⅓ cup, grated” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “Italian seasoning”, amount: “1 tsp” },
+{ name: “olive oil”, amount: “2 tbsp” },
+],
+notes: “One pan, rich creamy sauce. Serve over rice or with crusty bread.”,
+},
+{
+id: “15”,
+name: “Easy Foil-Pack Lemon Rosemary Chicken”,
+cuisine: “Mediterranean”,
+time: 30,
+rating: 4,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://tasty.co/recipe/easy-foil-pack-lemon-and-rosemary-chicken-dinner”,
+ingredients: [
+{ name: “chicken breasts”, amount: “4 medium” },
+{ name: “baby potatoes”, amount: “1 lb, halved” },
+{ name: “green beans”, amount: “2 cups” },
+{ name: “lemon”, amount: “1, sliced” },
+{ name: “fresh rosemary”, amount: “4 sprigs” },
+{ name: “garlic”, amount: “4 cloves, minced” },
+{ name: “olive oil”, amount: “3 tbsp” },
+{ name: “salt & pepper”, amount: “to taste” },
+],
+notes: “Wrap in foil — zero cleanup. Each person gets their own packet.”,
+},
 
-.clear-btn{width:100%;margin-top:2px;padding:8px;border-radius:10px;background:transparent;border:1px dashed var(–border);color:var(–ink-faint);font-family:-apple-system,sans-serif;font-size:12px;cursor:pointer;}
-.bfast-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
-.bfast-card{background:var(–card);border:1px solid var(–border);border-radius:14px;padding:12px;cursor:pointer;user-select:none;transition:all 0.15s;}
-.bfast-card.sel{border-color:var(–accent);background:var(–accent-glow);}
-.bfast-icon{font-size:20px;margin-bottom:4px;}
-.bfast-name{font-size:13px;font-weight:600;margin-bottom:2px;}
-.bfast-detail{font-size:11px;color:var(–ink-soft);}
-.bfast-cost{font-size:11px;font-weight:700;color:var(–yellow);margin-top:4px;}
-.groc-summary{background:var(–card);border:1px solid var(–border);border-radius:16px;padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;}
-.groc-stat-label{font-size:12px;color:var(–ink-soft);margin-bottom:2px;}
-.groc-stat-val{font-size:18px;font-weight:700;}
-.copy-btn{width:100%;padding:14px;background:var(–accent);color:var(–bg);border:none;border-radius:14px;font-family:-apple-system,sans-serif;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:14px;transition:background 0.2s;}
-.copy-btn.done{background:var(–accent-dark);}
-.ingr-block{background:var(–card);border:1px solid var(–border);border-radius:14px;margin-bottom:10px;overflow:hidden;}
-.ingr-hd{padding:10px 14px;border-bottom:1px solid var(–border);display:flex;justify-content:space-between;}
-.ingr-cat{font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(–ink-soft);}
-.ingr-ct{font-size:11px;color:var(–ink-faint);}
-.ingr-row{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(–border);font-size:13px;}
-.ingr-row:last-child{border-bottom:none;}
-.dot{width:6px;height:6px;border-radius:50%;background:var(–accent);margin-right:10px;flex-shrink:0;}
-.empty{text-align:center;padding:40px 20px;color:var(–ink-faint);font-size:13px;line-height:1.6;}
-.stock-intro{background:var(–card);border:1px solid var(–border);border-radius:14px;padding:14px;margin-bottom:14px;font-size:13px;color:var(–ink-soft);line-height:1.5;}
-.flag-banner{background:rgba(224,112,96,0.1);border:1px solid rgba(224,112,96,0.3);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(–red);font-weight:600;display:none;}
-.flag-banner.show{display:block;}
-.stock-row{display:flex;align-items:center;background:var(–card);border:1px solid var(–border);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;user-select:none;}
-.stock-row.flagged{border-color:var(–red);background:rgba(224,112,96,0.08);}
-.stock-icon{width:28px;height:28px;border-radius:8px;border:2px solid var(–border);display:flex;align-items:center;justify-content:center;margin-right:12px;flex-shrink:0;font-size:14px;}
-.stock-row.flagged .stock-icon{background:var(–red);border-color:var(–red);}
-.stock-name{font-size:13px;font-weight:500;}
-.stock-sub{font-size:11px;color:var(–ink-faint);margin-top:1px;}
-</style>
+// ── CROCK POT (Half Baked Harvest) ───────────────────────────────────────
+{
+id: “16”,
+name: “Crockpot Creamy Chicken & Dumplings”,
+cuisine: “Crock Pot”,
+time: 15,
+rating: 5,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://www.halfbakedharvest.com/crockpot-chicken-and-dumplings/”,
+ingredients: [
+{ name: “chicken breasts, boneless”, amount: “2 lbs” },
+{ name: “chicken broth”, amount: “4 cups” },
+{ name: “cream of chicken soup”, amount: “1 can (10.5 oz)” },
+{ name: “butter”, amount: “4 tbsp” },
+{ name: “onion”, amount: “1 medium, diced” },
+{ name: “carrots”, amount: “2 medium, sliced” },
+{ name: “celery”, amount: “2 stalks, sliced” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “fresh thyme”, amount: “4 sprigs” },
+{ name: “refrigerated biscuit dough”, amount: “1 can (8 count)” },
+{ name: “heavy cream”, amount: “½ cup” },
+{ name: “salt & pepper”, amount: “to taste” },
+],
+notes: “Add biscuit pieces last 45 min — they become fluffy dumplings. 6–8 hrs low.”,
+},
+{
+id: “17”,
+name: “Crockpot Creamy Broccoli Cheddar Chicken”,
+cuisine: “Crock Pot”,
+time: 10,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://www.halfbakedharvest.com/broccoli-cheddar-chicken/”,
+ingredients: [
+{ name: “chicken breasts, boneless”, amount: “1.5 lbs” },
+{ name: “broccoli florets”, amount: “3 cups” },
+{ name: “sharp white cheddar”, amount: “1½ cups, shredded” },
+{ name: “chicken broth”, amount: “1 cup” },
+{ name: “cream cheese”, amount: “4 oz” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “salsa verde (mild)”, amount: “¼ cup” },
+{ name: “butter”, amount: “3 tbsp” },
+{ name: “fresh thyme”, amount: “3 sprigs” },
+{ name: “salt & pepper”, amount: “to taste” },
+],
+notes: “10 min active prep. Serve over rice or mashed potatoes. 4–6 hrs low.”,
+},
+{
+id: “18”,
+name: “Crockpot Garlic Butter Chicken Meatballs & Orzo”,
+cuisine: “Crock Pot”,
+time: 20,
+rating: 5,
+tags: [“kid-friendly”],
+recipeUrl: “https://www.halfbakedharvest.com/garlic-butter-chicken-meatballs/”,
+ingredients: [
+{ name: “ground chicken”, amount: “1.5 lbs” },
+{ name: “orzo pasta”, amount: “1½ cups” },
+{ name: “parmesan cheese”, amount: “⅔ cup, grated” },
+{ name: “chicken broth”, amount: “3 cups” },
+{ name: “butter”, amount: “6 tbsp” },
+{ name: “garlic”, amount: “6 cloves, minced” },
+{ name: “breadcrumbs”, amount: “⅓ cup” },
+{ name: “egg”, amount: “1 large” },
+{ name: “Italian seasoning”, amount: “1 tsp” },
+{ name: “fresh basil”, amount: “¼ cup (garnish)” },
+],
+notes: “One of HBH’s most loved recipes. Meatballs go in raw — cook 4 hrs low.”,
+},
+{
+id: “19”,
+name: “Crockpot Hearty Chicken & Rice Soup”,
+cuisine: “Crock Pot”,
+time: 10,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://www.halfbakedharvest.com/chicken-and-rice-soup/”,
+ingredients: [
+{ name: “chicken breasts, boneless”, amount: “1.5 lbs” },
+{ name: “long grain white rice”, amount: “¾ cup, uncooked” },
+{ name: “chicken broth”, amount: “6 cups” },
+{ name: “carrots”, amount: “2 medium, sliced” },
+{ name: “celery”, amount: “2 stalks, sliced” },
+{ name: “onion”, amount: “1 medium, diced” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “Italian seasoning”, amount: “1 tsp” },
+{ name: “parmesan rind (optional)”, amount: “1 piece” },
+{ name: “parmesan cheese”, amount: “¼ cup, grated (topping)” },
+{ name: “salt & pepper”, amount: “to taste” },
+],
+notes: “Dump & forget. Add rice last 2 hrs. Parmesan on top makes it special.”,
+},
+{
+id: “20”,
+name: “Crockpot Salsa Verde Chicken Tortilla Bowls”,
+cuisine: “Crock Pot”,
+time: 10,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://www.halfbakedharvest.com/salsa-verde-chicken-tortilla-bowl/”,
+ingredients: [
+{ name: “chicken thighs, boneless”, amount: “2 lbs” },
+{ name: “salsa verde (mild)”, amount: “1 cup” },
+{ name: “red salsa (mild)”, amount: “½ cup” },
+{ name: “chicken broth”, amount: “½ cup” },
+{ name: “cumin”, amount: “1 tsp” },
+{ name: “garlic powder”, amount: “1 tsp” },
+{ name: “white rice, cooked”, amount: “3 cups” },
+{ name: “shredded cheese”, amount: “1 cup” },
+{ name: “avocado”, amount: “1, sliced” },
+{ name: “tortilla chips”, amount: “1 bag (topping)” },
+],
+notes: “Use mild salsa for toddlers. Shred chicken, serve over rice bowls. 6 hrs low.”,
+},
+{
+id: “21”,
+name: “Crockpot Hamburger Helper”,
+cuisine: “Crock Pot”,
+time: 15,
+rating: 4,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://www.halfbakedharvest.com/crockpot-hamburger-helper/”,
+ingredients: [
+{ name: “ground beef (lean)”, amount: “1.5 lbs” },
+{ name: “elbow pasta”, amount: “2 cups, uncooked” },
+{ name: “beef broth”, amount: “2 cups” },
+{ name: “diced tomatoes”, amount: “1 can (14 oz)” },
+{ name: “cream cheese”, amount: “4 oz” },
+{ name: “cheddar cheese”, amount: “1½ cups, shredded” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “onion powder”, amount: “1 tsp” },
+{ name: “paprika”, amount: “1 tsp” },
+{ name: “Worcestershire sauce”, amount: “1 tbsp” },
+],
+notes: “Brown beef first for best flavor. Add pasta last 30 min. Kids love this one.”,
+},
+{
+id: “22”,
+name: “Crockpot Creamy Sun-Dried Tomato Lasagna Soup”,
+cuisine: “Crock Pot”,
+time: 15,
+rating: 5,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://www.halfbakedharvest.com/sun-dried-tomato-lasagna-soup/”,
+ingredients: [
+{ name: “Italian sausage (mild)”, amount: “1 lb” },
+{ name: “lasagna noodles, broken”, amount: “8 sheets” },
+{ name: “sun-dried tomatoes”, amount: “⅓ cup, chopped” },
+{ name: “crushed tomatoes”, amount: “1 can (28 oz)” },
+{ name: “chicken broth”, amount: “4 cups” },
+{ name: “heavy cream”, amount: “½ cup” },
+{ name: “baby spinach”, amount: “2 cups” },
+{ name: “garlic”, amount: “4 cloves, minced” },
+{ name: “Italian seasoning”, amount: “1 tsp” },
+{ name: “ricotta cheese”, amount: “½ cup (topping)” },
+{ name: “parmesan cheese”, amount: “¼ cup (topping)” },
+],
+notes: “Add noodles last 30 min. Drop ricotta on top when serving — kids love it.”,
+},
+{
+id: “23”,
+name: “Cider Braised Short Ribs with Mashed Potatoes”,
+cuisine: “Crock Pot”,
+time: 20,
+rating: 5,
+tags: [“kid-friendly”],
+recipeUrl: “https://www.halfbakedharvest.com/cider-braised-short-ribs/”,
+ingredients: [
+{ name: “beef short ribs”, amount: “3 lbs” },
+{ name: “apple cider”, amount: “1 cup” },
+{ name: “beef broth”, amount: “1 cup” },
+{ name: “onion”, amount: “1 large, sliced” },
+{ name: “garlic”, amount: “4 cloves, minced” },
+{ name: “tomato paste”, amount: “2 tbsp” },
+{ name: “fresh thyme”, amount: “4 sprigs” },
+{ name: “butter”, amount: “2 tbsp” },
+{ name: “russet potatoes”, amount: “2 lbs, for mash” },
+{ name: “whole milk”, amount: “½ cup, for mash” },
+{ name: “salt & pepper”, amount: “to taste” },
+],
+notes: “Sweet cider makes this very kid-friendly. Meat falls off the bone. 8 hrs low.”,
+},
+{
+id: “24”,
+name: “Crockpot Chicken Parmesan”,
+cuisine: “Crock Pot”,
+time: 10,
+rating: 5,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://www.halfbakedharvest.com/crockpot-chicken-parmesan/”,
+ingredients: [
+{ name: “chicken breasts, boneless”, amount: “4 medium” },
+{ name: “marinara sauce”, amount: “2 cups” },
+{ name: “mozzarella cheese”, amount: “1½ cups, shredded” },
+{ name: “parmesan cheese”, amount: “½ cup, grated” },
+{ name: “Italian seasoning”, amount: “1 tsp” },
+{ name: “garlic powder”, amount: “½ tsp” },
+{ name: “spaghetti or penne”, amount: “12 oz, cooked (to serve)” },
+{ name: “fresh basil”, amount: “¼ cup (garnish)” },
+],
+notes: “Classic kid-favorite made effortless. Dump & go — 4 hrs low. Serve over pasta.”,
+},
+{
+id: “25”,
+name: “Slow Cooker Creamy Tortellini Vegetable Soup”,
+cuisine: “Crock Pot”,
+time: 10,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://www.halfbakedharvest.com/tortellini-vegetable-soup/”,
+ingredients: [
+{ name: “cheese tortellini”, amount: “9 oz (refrigerated)” },
+{ name: “chicken broth”, amount: “4 cups” },
+{ name: “diced tomatoes”, amount: “1 can (14 oz)” },
+{ name: “carrots”, amount: “2 medium, sliced” },
+{ name: “celery”, amount: “2 stalks, sliced” },
+{ name: “onion”, amount: “1 medium, diced” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “baby spinach”, amount: “2 cups” },
+{ name: “heavy cream”, amount: “½ cup” },
+{ name: “Italian seasoning”, amount: “1 tsp” },
+{ name: “parmesan cheese”, amount: “¼ cup (topping)” },
+],
+notes: “Add tortellini last 20 min only. Cheesy pasta in soup — toddlers love this.”,
+},
+{
+id: “26”,
+name: “Crockpot Mustard Herb Chicken & Creamy Orzo”,
+cuisine: “Crock Pot”,
+time: 15,
+rating: 4,
+tags: [“healthy”, “kid-friendly”],
+recipeUrl: “https://www.halfbakedharvest.com/crockpot-mustard-herb-chicken-and-creamy-orzo/”,
+ingredients: [
+{ name: “chicken thighs, boneless”, amount: “2 lbs” },
+{ name: “orzo pasta”, amount: “1½ cups” },
+{ name: “chicken broth”, amount: “3 cups” },
+{ name: “heavy cream”, amount: “½ cup” },
+{ name: “Dijon mustard”, amount: “3 tbsp” },
+{ name: “garlic”, amount: “4 cloves, minced” },
+{ name: “fresh thyme”, amount: “4 sprigs” },
+{ name: “fresh rosemary”, amount: “2 sprigs” },
+{ name: “butter”, amount: “3 tbsp” },
+{ name: “parmesan cheese”, amount: “⅓ cup, grated” },
+],
+notes: “Mild mustard flavor — not spicy. Add orzo last 30 min. Rich and comforting.”,
+},
 
-</head>
-<body>
-<div class="nav">
-  <div class="nav-title">🥗 Meal Plan <em>2</em></div>
-  <div class="tabs">
-    <div class="tab active" onclick="goPage('plan',this)">Plan</div>
-    <div class="tab" onclick="goPage('grocery',this)">Grocery List</div>
-    <div class="tab" onclick="goPage('stock',this)">🚨 Low Stock</div>
-  </div>
-</div>
-<div class="page active" id="page-plan">
-  <div class="budget-bar">
-    <div class="budget-row"><div class="budget-label">Weekly Budget</div><div class="budget-num" id="bAmt">$0 <small>/ $100</small></div></div>
-    <div class="budget-track"><div class="budget-fill" id="bFill" style="width:0%"></div></div>
-  </div>
-  <div class="sec-hd">🌙 Dinners — Pick 5</div>
-  <div class="cuisine-scroll" id="cuisineFilter"></div>
-  <div id="dinnerDays"></div>
-  <div class="sec-hd">☀️ Breakfast style this week</div>
-  <div class="bfast-grid" id="bfastGrid"></div>
-</div>
-<div class="page" id="page-grocery">
-  <div class="groc-summary">
-    <div><div class="groc-stat-label">Items needed</div><div class="groc-stat-val" id="gCount">0</div></div>
-    <div style="text-align:right"><div class="groc-stat-label">Est. cost</div><div class="groc-stat-val" id="gCost">$0</div></div>
-  </div>
-  <button class="copy-btn" id="copyBtn" onclick="copyGrocery()">📋 Copy Grocery List</button>
-  <div id="grocList"></div>
-</div>
-<div class="page" id="page-stock">
-  <div class="stock-intro">Tap anything running low — both you and Mechelle can flag items. They'll auto-appear on the grocery list. 🛒</div>
-  <div class="flag-banner" id="flagBanner"></div>
-  <div id="stockList"></div>
-</div>
-
-<script>
-var BUDGET=100,DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday'],activeCuisine='all',openRecipe=null;
-
-var meals=[
-  {id:1,name:'Chicken Tacos',cat:'mexican',emoji:'🌮',cost:14,time:'25 min',spicy:true,ing:{Produce:['3 on-the-vine tomatoes','2 avocados','1 bunch cilantro','2 limes'],Meat:['1.5 lb chicken breast'],Pantry:['McCormick taco seasoning','Herdez salsa verde','Rosarita refried beans','Signature SELECT black beans'],Bread:['La Comadre flour tortillas']}},
-  {id:2,name:'Chicken Burrito Bowls',cat:'mexican',emoji:'🫙',cost:13,time:'25 min',spicy:true,ing:{Produce:['2 avocados','1 bunch cilantro','1 lime','1 red bell pepper'],Meat:['1.5 lb chicken breast'],Pantry:['McCormick taco seasoning','Herdez salsa verde','Rosarita refried beans','Signature SELECT black beans'],Vegetables:['Baby gold potatoes']}},
-  {id:3,name:'Chicken Quesadillas',cat:'mexican',emoji:'🧀',cost:11,time:'20 min',spicy:false,ing:{Meat:['Open Nature chicken sausage 12oz'],Dairy:['Lucerne Colby Jack slices','Lucerne mozzarella 8oz'],Bread:['Mission white corn tortillas'],Pantry:['Herdez salsa verde'],Produce:['1 red bell pepper','1 avocado']}},
-  {id:4,name:'Black Bean Tostadas',cat:'mexican',emoji:'🫓',cost:9,time:'20 min',spicy:true,ing:{Pantry:['Signature SELECT black beans','Rosarita refried beans'],Produce:['2 avocados','2 limes','1 bunch cilantro','2 on-the-vine tomatoes'],Dairy:['Lucerne Colby Jack slices'],Bread:['Mission white corn tortillas']}},
-  {id:5,name:'Black Bean Soup',cat:'mexican',emoji:'🥣',cost:8,time:'25 min',spicy:true,ing:{Pantry:['Signature SELECT black beans x2','Chicken broth','Cumin','Garlic'],Produce:['1 red bell pepper','1 bunch cilantro','1 lime','2 shallots'],Dairy:['Lucerne Greek yogurt plain (topping)']}},
-  {id:6,name:'Spaghetti & Meat Sauce',cat:'italian',emoji:'🍝',cost:10,time:'25 min',spicy:false,ing:{Pantry:['Barilla spaghetti 16oz','Signature SELECT pasta sauce garlic basil'],Meat:['Signature SELECT turkey pepperoni'],Dairy:['Lucerne mozzarella 8oz']}},
-  {id:7,name:'Flatbread Pizza Night',cat:'italian',emoji:'🍕',cost:9,time:'20 min',spicy:false,ing:{Bread:['Signature SELECT garlic flatbread naan'],Pantry:['Signature SELECT pizza sauce'],Meat:['Signature SELECT turkey pepperoni'],Dairy:['Lucerne mozzarella 8oz']}},
-  {id:8,name:'Fusilli with Zucchini & Kale',cat:'italian',emoji:'🍃',cost:10,time:'25 min',spicy:false,ing:{Pantry:['De Cecco fusilli 16oz','Signature SELECT cannellini beans'],Produce:['2 zucchini','Cal-Organic kale 1 bunch','1 lemon'],Herbs:['Fresh sage 1 bunch','Fresh thyme 1 bunch']}},
-  {id:9,name:'Rigatoni Bake',cat:'italian',emoji:'🫙',cost:11,time:'30 min',spicy:false,ing:{Pantry:['Signature SELECT rigatoni 16oz','Signature SELECT pasta sauce garlic basil'],Dairy:['Lucerne mozzarella 8oz','Lucerne heavy whipping cream 16oz'],Produce:['2 zucchini','2 shallots']}},
-  {id:10,name:'Tuscan White Bean Soup',cat:'italian',emoji:'🫘',cost:9,time:'30 min',spicy:false,ing:{Pantry:['Signature SELECT cannellini beans','Signature SELECT pasta sauce'],Produce:['Cal-Organic kale 1 bunch','1 leek','4 shallots'],Herbs:['Fresh thyme','Fresh sage'],Dairy:['Lucerne heavy whipping cream']}},
-  {id:11,name:'Teriyaki Chicken Bowls',cat:'japanese',emoji:'🍱',cost:13,time:'25 min',spicy:false,ing:{Meat:['1.5 lb chicken breast'],Pantry:['Soy sauce','Signature SELECT honey','Rice vinegar','Garlic','Sesame oil'],Vegetables:['Broccoli florets family pack 24oz'],Grains:['Jasmine rice 2 lb bag']}},
-  {id:12,name:'Salmon & Edamame Bowls',cat:'japanese',emoji:'🐟',cost:15,time:'25 min',spicy:false,ing:{Meat:['Salmon fillet 1 lb'],Pantry:['Soy sauce','Rice vinegar','Sesame oil','Signature SELECT honey'],Produce:['2 avocados','1 lime','2 shallots'],Frozen:['Shelled edamame 12oz'],Grains:['Jasmine rice 2 lb bag']}},
-  {id:13,name:'Chicken Fried Rice',cat:'japanese',emoji:'🍳',cost:10,time:'25 min',spicy:false,ing:{Meat:['1 lb chicken breast diced'],Dairy:['Lucerne Farms eggs (3 eggs)'],Pantry:['Soy sauce','Sesame oil','Garlic'],Produce:['3 shallots','2 carrots'],Vegetables:['Broccoli florets'],Grains:['Jasmine rice (day-old works best)']}},
-  {id:14,name:'Miso Glazed Chicken & Rice',cat:'japanese',emoji:'🍜',cost:12,time:'30 min',spicy:false,ing:{Meat:['1.5 lb chicken breast'],Pantry:['White miso paste','Soy sauce','Rice vinegar','Signature SELECT honey','Sesame oil'],Produce:['2 shallots'],Vegetables:['Broccoli florets family pack'],Grains:['Jasmine rice 2 lb bag']}},
-  {id:15,name:'Peanut Noodle Bowls',cat:'thai',emoji:'🥜',cost:11,time:'20 min',spicy:true,ing:{Pantry:['Peanut butter','Soy sauce','Rice vinegar','Signature SELECT honey','Sesame oil','Garlic'],Produce:['2 carrots','1 red bell pepper','1 bunch cilantro','1 lime'],Grains:['Rice noodles 14oz'],Meat:['1 lb chicken breast (optional)']}},
-  {id:16,name:'Coconut Curry Chicken',cat:'thai',emoji:'🍛',cost:13,time:'30 min',spicy:true,ing:{Meat:['1.5 lb chicken breast'],Pantry:['Coconut milk 13.5oz','Mild green curry paste','Soy sauce','Garlic'],Produce:['1 red bell pepper','1 yellow bell pepper','1 bunch cilantro','1 lime'],Grains:['Jasmine rice 2 lb bag']}},
-  {id:17,name:'Thai Basil Chicken',cat:'thai',emoji:'🌿',cost:12,time:'20 min',spicy:true,ing:{Meat:['1.5 lb ground or diced chicken'],Pantry:['Soy sauce','Oyster sauce','Sesame oil','Garlic'],Produce:['1 red bell pepper','3 shallots','1 bunch fresh basil'],Grains:['Jasmine rice 2 lb bag']}},
-  {id:18,name:'Butter Chicken (shortcut)',cat:'indian',emoji:'🫕',cost:13,time:'30 min',spicy:true,ing:{Meat:['1.5 lb chicken breast'],Pantry:['Tomato sauce 15oz','Coconut milk 13.5oz','Garam masala','Cumin','Garlic','Ginger'],Dairy:['Lucerne heavy whipping cream'],Grains:['Jasmine rice 2 lb bag'],Bread:['Signature SELECT garlic flatbread naan']}},
-  {id:19,name:'Red Lentil Dal',cat:'indian',emoji:'🥘',cost:8,time:'30 min',spicy:true,ing:{Pantry:['Red lentils 1 lb','Coconut milk 13.5oz','Tomato sauce 15oz','Cumin','Turmeric','Garlic','Ginger'],Produce:['3 shallots','1 bunch cilantro','1 lime'],Grains:['Jasmine rice 2 lb bag']}},
-  {id:20,name:'Chickpea Tikka Masala',cat:'indian',emoji:'🫘',cost:9,time:'30 min',spicy:true,ing:{Pantry:['Chickpeas 15oz x2','Tomato sauce 15oz','Coconut milk 13.5oz','Garam masala','Cumin','Garlic','Ginger'],Produce:['3 shallots','1 bunch cilantro','1 lime'],Grains:['Jasmine rice 2 lb bag']}},
-  {id:21,name:'Greek Chicken Bowls',cat:'mediterranean',emoji:'🫙',cost:13,time:'25 min',spicy:false,ing:{Meat:['1.5 lb chicken breast'],Pantry:['Olive oil','Dried oregano','Garlic','O Organics hummus'],Produce:['O Organics romaine hearts','2 on-the-vine tomatoes','1 cucumber','1 lemon'],Dairy:['Feta cheese crumbled 4oz']}},
-  {id:22,name:'Hummus Flatbread Plate',cat:'mediterranean',emoji:'🫓',cost:8,time:'10 min',spicy:false,ing:{Pantry:['O Organics hummus'],Bread:['Signature SELECT garlic flatbread naan'],Produce:['O Organics romaine hearts','2 on-the-vine tomatoes','1 cucumber','1 lemon'],Snacks:['Open Nature pita chips']}},
-  {id:23,name:'Lemon Herb Salmon',cat:'mediterranean',emoji:'🐟',cost:15,time:'25 min',spicy:false,ing:{Meat:['Salmon fillet 1 lb'],Produce:['2 lemons','Cal-Organic kale 1 bunch','2 shallots'],Herbs:['Fresh thyme','Fresh sage'],Vegetables:['Broccoli florets family pack']}},
-  {id:24,name:'Stuffed Pepper Bowls',cat:'mediterranean',emoji:'🫑',cost:12,time:'30 min',spicy:false,ing:{Produce:['2 red bell peppers','2 yellow bell peppers','2 shallots','3 on-the-vine tomatoes'],Meat:['1 lb ground turkey or chicken'],Pantry:['Signature SELECT black beans','Olive oil','Garlic','Dried oregano'],Dairy:['Lucerne mozzarella 8oz']}},
-  {id:25,name:'Ginger Soy Stir Fry',cat:'chinese',emoji:'🥢',cost:12,time:'20 min',spicy:true,ing:{Meat:['1.5 lb chicken breast'],Pantry:['Soy sauce','Sesame oil','Fresh ginger','Garlic','Cornstarch'],Produce:['1 red bell pepper','2 carrots','2 shallots'],Vegetables:['Broccoli florets family pack'],Grains:['Jasmine rice 2 lb bag']}},
-  {id:26,name:'Honey Garlic Chicken',cat:'chinese',emoji:'🍯',cost:11,time:'25 min',spicy:false,ing:{Meat:['1.5 lb chicken breast'],Pantry:['Soy sauce','Signature SELECT honey','Garlic','Sesame oil','Cornstarch'],Produce:['2 shallots','2 carrots'],Vegetables:['Broccoli florets family pack'],Grains:['Jasmine rice 2 lb bag']}},
-  {id:27,name:'Sesame Noodles with Veggies',cat:'chinese',emoji:'🍜',cost:9,time:'20 min',spicy:true,ing:{Pantry:['Soy sauce','Sesame oil','Peanut butter','Rice vinegar','Signature SELECT honey'],Produce:['2 carrots','1 red bell pepper','2 shallots','1 bunch cilantro'],Grains:['Rice noodles 14oz']}},
-  {id:28,name:'Turkey Burger Lettuce Wraps',cat:'american',emoji:'🥬',cost:12,time:'20 min',spicy:false,ing:{Meat:['1 lb ground turkey'],Produce:['O Organics romaine hearts','2 on-the-vine tomatoes','1 avocado'],Dairy:['Lucerne Colby Jack slices'],Pantry:['Signature SELECT bread crumbs','Garlic','Olive oil']}},
-  {id:29,name:'Chicken & Broccoli Rice Bowl',cat:'american',emoji:'🥦',cost:12,time:'25 min',spicy:false,ing:{Meat:['1.5 lb chicken breast'],Vegetables:['Broccoli florets family pack 24oz'],Pantry:['Olive oil','Garlic','Soy sauce'],Grains:['Jasmine rice 2 lb bag'],Dairy:['Lucerne Colby Jack slices']}},
-  {id:30,name:'Sheet Pan Chicken Sausage',cat:'american',emoji:'🍳',cost:11,time:'30 min',spicy:false,ing:{Produce:['1 yellow bell pepper','1 red bell pepper','2 carrots'],Meat:['Open Nature chicken sausage 12oz'],Vegetables:['Baby gold potatoes 1.5 lb','1 red sweet potato']}},
-  {id:31,name:'Chicken Meal Prep Bowls',cat:'american',emoji:'🥗',cost:15,time:'30 min',spicy:false,ing:{Salads:['Fresh Express Caesar salad kit','Fresh Express SW Greek yogurt salad kit'],Meat:['2 lb chicken breast'],Dairy:['Lucerne Greek yogurt plain 32oz']}},
-  {id:32,name:'Kale & Carrot Grain Bowls',cat:'healthy',emoji:'🥬',cost:10,time:'25 min',spicy:false,ing:{Produce:['Cal-Organic kale 2 bunches','2 carrots','2 shallots'],Pantry:['Signature SELECT cannellini beans','Signature SELECT bread crumbs','Olive oil','Garlic'],Dairy:['Lucerne Greek yogurt plain (dressing)']}},
-  {id:33,name:'Broccoli & Chicken Stir Fry',cat:'healthy',emoji:'🥦',cost:12,time:'25 min',spicy:true,ing:{Vegetables:['Broccoli florets family pack 24oz'],Meat:['1.5 lb chicken breast'],Produce:['2 shallots','1 red bell pepper'],Pantry:['Soy sauce','Sesame oil','Garlic'],Grains:['Jasmine rice 2 lb bag']}},
-  {id:34,name:'Sweet Potato & Chicken Bake',cat:'healthy',emoji:'🍠',cost:12,time:'30 min',spicy:false,ing:{Produce:['2 red sweet potato/yam','2 avocados','1 lime'],Meat:['Open Nature chicken sausage 12oz'],Herbs:['Fresh thyme'],Pantry:['Olive oil','Garlic']}},
+// ── BUDGET BYTES ONE-POT ─────────────────────────────────────────────────
+{
+id: “27”,
+name: “One Pot Chicken and Rice”,
+cuisine: “American”,
+time: 30,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/one-pot-chicken-and-rice/”,
+ingredients: [
+{ name: “chicken thighs, boneless”, amount: “1.5 lbs” },
+{ name: “long grain white rice”, amount: “1.5 cups” },
+{ name: “chicken broth”, amount: “2.5 cups” },
+{ name: “onion”, amount: “1 medium, diced” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “olive oil”, amount: “2 tbsp” },
+{ name: “smoked paprika”, amount: “1 tsp” },
+{ name: “Italian seasoning”, amount: “1 tsp” },
+{ name: “fresh parsley”, amount: “2 tbsp, chopped (garnish)” },
+],
+notes: “$1.54/serving. Rice cooks right in the broth — incredibly flavorful.”,
+},
+{
+id: “28”,
+name: “Skillet Lasagna”,
+cuisine: “Italian”,
+time: 30,
+rating: 5,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/skillet-lasagna/”,
+ingredients: [
+{ name: “ground beef (lean)”, amount: “1 lb” },
+{ name: “lasagna noodles, broken”, amount: “9 sheets” },
+{ name: “marinara sauce”, amount: “24 oz jar” },
+{ name: “water”, amount: “1.5 cups” },
+{ name: “ricotta cheese”, amount: “1 cup” },
+{ name: “mozzarella cheese”, amount: “1 cup, shredded” },
+{ name: “parmesan cheese”, amount: “¼ cup, grated” },
+{ name: “garlic”, amount: “2 cloves, minced” },
+{ name: “Italian seasoning”, amount: “1 tsp” },
+{ name: “fresh basil”, amount: “small handful (garnish)” },
+],
+notes: “$2.25/serving. One skillet, 30 min. All the lasagna flavor with zero fuss.”,
+},
+{
+id: “29”,
+name: “One Pot Cheeseburger Pasta”,
+cuisine: “American”,
+time: 25,
+rating: 5,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/skillet-cheeseburger-pasta/”,
+ingredients: [
+{ name: “ground beef (lean)”, amount: “1 lb” },
+{ name: “rotini pasta”, amount: “2 cups” },
+{ name: “beef broth”, amount: “2 cups” },
+{ name: “diced tomatoes”, amount: “1 can (14 oz)” },
+{ name: “cheddar cheese”, amount: “1 cup, shredded” },
+{ name: “onion”, amount: “½ medium, diced” },
+{ name: “garlic”, amount: “2 cloves, minced” },
+{ name: “Worcestershire sauce”, amount: “1 tbsp” },
+{ name: “mustard”, amount: “1 tsp” },
+{ name: “green onions”, amount: “2 stalks, sliced (garnish)” },
+{ name: “dill pickles, sliced”, amount: “¼ cup (garnish, optional)” },
+],
+notes: “$1.26/serving. Kids go crazy for this. Tastes just like a cheeseburger.”,
+},
+{
+id: “30”,
+name: “Chicken Fried Rice”,
+cuisine: “Asian”,
+time: 20,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/chicken-fried-rice/”,
+ingredients: [
+{ name: “cooked white rice (cold)”, amount: “3 cups” },
+{ name: “chicken breast”, amount: “1 lb, diced” },
+{ name: “eggs”, amount: “2 large” },
+{ name: “frozen peas & carrots”, amount: “1 cup” },
+{ name: “soy sauce (low sodium)”, amount: “3 tbsp” },
+{ name: “sesame oil”, amount: “1 tsp” },
+{ name: “garlic”, amount: “2 cloves, minced” },
+{ name: “green onions”, amount: “2 stalks, sliced (garnish)” },
+{ name: “sesame seeds”, amount: “1 tsp (garnish)” },
+{ name: “vegetable oil”, amount: “2 tbsp” },
+],
+notes: “$1.19/serving. Use day-old rice. Ready in 20 min — better than takeout.”,
+},
+{
+id: “31”,
+name: “Chicken and Dumplings”,
+cuisine: “American”,
+time: 30,
+rating: 5,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/chicken-and-dumplings/”,
+ingredients: [
+{ name: “chicken breast”, amount: “1 lb, diced” },
+{ name: “chicken broth”, amount: “4 cups” },
+{ name: “all-purpose flour”, amount: “1.5 cups (for dumplings)” },
+{ name: “baking powder”, amount: “2 tsp” },
+{ name: “whole milk”, amount: “¾ cup” },
+{ name: “butter”, amount: “3 tbsp” },
+{ name: “carrots”, amount: “2 medium, sliced” },
+{ name: “celery”, amount: “2 stalks, sliced” },
+{ name: “onion”, amount: “1 medium, diced” },
+{ name: “garlic”, amount: “2 cloves, minced” },
+{ name: “fresh parsley”, amount: “2 tbsp, chopped (garnish)” },
+],
+notes: “$1.18/serving. Classic comfort food. Fluffy dumplings toddlers love.”,
+},
+{
+id: “32”,
+name: “One Pot Creamy Pesto Chicken Pasta”,
+cuisine: “Italian”,
+time: 30,
+rating: 5,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/one-pot-creamy-pesto-chicken-pasta/”,
+ingredients: [
+{ name: “chicken breast”, amount: “1 lb, diced” },
+{ name: “penne pasta”, amount: “12 oz” },
+{ name: “chicken broth”, amount: “2 cups” },
+{ name: “heavy cream”, amount: “½ cup” },
+{ name: “pesto sauce”, amount: “¼ cup” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “parmesan cheese”, amount: “¼ cup, grated” },
+{ name: “olive oil”, amount: “2 tbsp” },
+{ name: “cherry tomatoes”, amount: “½ cup, halved (garnish)” },
+{ name: “fresh basil”, amount: “small handful (garnish)” },
+],
+notes: “$2.94/serving. Everything cooks in one pot — pasta absorbs all the flavor.”,
+},
+{
+id: “33”,
+name: “Taco Pasta”,
+cuisine: “Mexican”,
+time: 25,
+rating: 5,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/beef-taco-pasta/”,
+ingredients: [
+{ name: “ground beef (lean)”, amount: “1 lb” },
+{ name: “rotini pasta”, amount: “2 cups” },
+{ name: “taco seasoning (mild)”, amount: “1 packet” },
+{ name: “diced tomatoes”, amount: “1 can (14 oz)” },
+{ name: “chicken broth”, amount: “1.5 cups” },
+{ name: “shredded cheddar cheese”, amount: “1 cup” },
+{ name: “sour cream”, amount: “¼ cup” },
+{ name: “garlic”, amount: “2 cloves, minced” },
+{ name: “lime”, amount: “1, juiced (garnish)” },
+{ name: “fresh cilantro”, amount: “2 tbsp, chopped (garnish)” },
+{ name: “green onions”, amount: “2 stalks, sliced (garnish)” },
+],
+notes: “$1.44/serving. Taco night in pasta form. One skillet, 25 min.”,
+},
+{
+id: “34”,
+name: “Beef Stroganoff”,
+cuisine: “American”,
+time: 30,
+rating: 5,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/beef-stroganoff/”,
+ingredients: [
+{ name: “ground beef (lean)”, amount: “1 lb” },
+{ name: “egg noodles”, amount: “8 oz” },
+{ name: “beef broth”, amount: “2 cups” },
+{ name: “sour cream”, amount: “½ cup” },
+{ name: “mushrooms”, amount: “8 oz, sliced” },
+{ name: “onion”, amount: “1 medium, diced” },
+{ name: “garlic”, amount: “2 cloves, minced” },
+{ name: “Worcestershire sauce”, amount: “1 tbsp” },
+{ name: “butter”, amount: “2 tbsp” },
+{ name: “fresh parsley”, amount: “2 tbsp, chopped (garnish)” },
+],
+notes: “$1.39/serving. Creamy and comforting. Noodles cook right in the pan.”,
+},
+{
+id: “35”,
+name: “Easy American Goulash”,
+cuisine: “American”,
+time: 30,
+rating: 4,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/goulash/”,
+ingredients: [
+{ name: “ground beef (lean)”, amount: “1 lb” },
+{ name: “elbow macaroni”, amount: “2 cups” },
+{ name: “diced tomatoes”, amount: “2 cans (14 oz each)” },
+{ name: “beef broth”, amount: “1 cup” },
+{ name: “tomato paste”, amount: “2 tbsp” },
+{ name: “onion”, amount: “1 medium, diced” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “Italian seasoning”, amount: “2 tsp” },
+{ name: “cheddar cheese”, amount: “1 cup (topping)” },
+{ name: “fresh parsley”, amount: “2 tbsp, chopped (garnish)” },
+],
+notes: “$2.05/serving. Old-school comfort food. Kids call it ‘beefy mac’.”,
+},
+{
+id: “36”,
+name: “One Pot Creamy Sun-Dried Tomato Pasta”,
+cuisine: “Italian”,
+time: 20,
+rating: 5,
+tags: [“budget”, “healthy”],
+recipeUrl: “https://www.budgetbytes.com/one-pot-creamy-sun-dried-tomato-pasta/”,
+ingredients: [
+{ name: “fettuccine or linguine”, amount: “12 oz” },
+{ name: “sun-dried tomatoes”, amount: “⅓ cup, chopped” },
+{ name: “chicken broth”, amount: “2.5 cups” },
+{ name: “heavy cream”, amount: “½ cup” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “baby spinach”, amount: “2 cups” },
+{ name: “parmesan cheese”, amount: “⅓ cup, grated” },
+{ name: “olive oil”, amount: “1 tbsp” },
+{ name: “lemon”, amount: “½, juiced (garnish)” },
+{ name: “fresh basil”, amount: “small handful (garnish)” },
+],
+notes: “$1.06/serving. One of Budget Bytes’ most loved recipes. 20 min total.”,
+},
+{
+id: “37”,
+name: “Tuscan Orzo”,
+cuisine: “Italian”,
+time: 25,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/tuscan-orzo/”,
+ingredients: [
+{ name: “orzo pasta”, amount: “1.5 cups” },
+{ name: “chicken broth”, amount: “2.5 cups” },
+{ name: “sun-dried tomatoes”, amount: “¼ cup” },
+{ name: “baby spinach”, amount: “2 cups” },
+{ name: “heavy cream”, amount: “¼ cup” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “parmesan cheese”, amount: “¼ cup, grated” },
+{ name: “olive oil”, amount: “1 tbsp” },
+{ name: “Italian seasoning”, amount: “1 tsp” },
+{ name: “lemon”, amount: “½, juiced (garnish)” },
+{ name: “fresh parsley”, amount: “2 tbsp, chopped (garnish)” },
+],
+notes: “$1.86/serving. Creamy orzo with Tuscan flavors. Ready in 25 min.”,
+},
+{
+id: “38”,
+name: “Easy Minestrone Soup”,
+cuisine: “Italian”,
+time: 30,
+rating: 4,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/easy-vegetarian-minestrone/”,
+ingredients: [
+{ name: “kidney beans”, amount: “1 can (15 oz), drained” },
+{ name: “diced tomatoes”, amount: “1 can (14 oz)” },
+{ name: “vegetable broth”, amount: “4 cups” },
+{ name: “small pasta (ditalini)”, amount: “1 cup” },
+{ name: “zucchini”, amount: “1 medium, diced” },
+{ name: “carrots”, amount: “2 medium, sliced” },
+{ name: “celery”, amount: “2 stalks, sliced” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “Italian seasoning”, amount: “2 tsp” },
+{ name: “parmesan cheese”, amount: “¼ cup (topping)” },
+{ name: “fresh parsley”, amount: “2 tbsp, chopped (garnish)” },
+{ name: “lemon”, amount: “½, juiced (garnish)” },
+],
+notes: “$0.99/serving. Budget-friendly veggie soup. Freezes great.”,
+},
+{
+id: “39”,
+name: “One Pot Chili Mac”,
+cuisine: “American”,
+time: 25,
+rating: 5,
+tags: [“kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/chili-cheese-beef-n-mac/”,
+ingredients: [
+{ name: “ground beef (lean)”, amount: “1 lb” },
+{ name: “elbow macaroni”, amount: “1.5 cups” },
+{ name: “kidney beans”, amount: “1 can (15 oz), drained” },
+{ name: “diced tomatoes”, amount: “1 can (14 oz)” },
+{ name: “beef broth”, amount: “1.5 cups” },
+{ name: “chili powder (mild)”, amount: “1 tbsp” },
+{ name: “cumin”, amount: “1 tsp” },
+{ name: “garlic”, amount: “2 cloves, minced” },
+{ name: “shredded cheddar cheese”, amount: “1 cup (topping)” },
+{ name: “sour cream”, amount: “¼ cup (topping)” },
+{ name: “green onions”, amount: “2 stalks, sliced (garnish)” },
+],
+notes: “$1.50/serving. Use mild chili powder for toddlers. Mac + chili in one pot.”,
+},
+{
+id: “40”,
+name: “Chicken Broth Bowl”,
+cuisine: “Asian”,
+time: 25,
+rating: 4,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/chicken-broth-bowl/”,
+ingredients: [
+{ name: “chicken breast”, amount: “1 lb” },
+{ name: “white rice”, amount: “1 cup, uncooked” },
+{ name: “chicken broth”, amount: “4 cups” },
+{ name: “carrots”, amount: “2 medium, sliced” },
+{ name: “baby bok choy”, amount: “2 cups” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “ginger (ground)”, amount: “½ tsp” },
+{ name: “soy sauce (low sodium)”, amount: “2 tbsp” },
+{ name: “sesame oil”, amount: “1 tsp” },
+{ name: “green onions”, amount: “2 stalks, sliced (garnish)” },
+{ name: “sesame seeds”, amount: “1 tsp (garnish)” },
+{ name: “lime”, amount: “1, cut into wedges (garnish)” },
+],
+notes: “$1.89/serving. Nourishing and mild. Toddlers love the soft rice and carrots.”,
+},
+{
+id: “41”,
+name: “Egg Roll in a Bowl”,
+cuisine: “Asian”,
+time: 20,
+rating: 5,
+tags: [“healthy”, “kid-friendly”, “budget”],
+recipeUrl: “https://www.budgetbytes.com/egg-roll-in-a-bowl/”,
+ingredients: [
+{ name: “ground pork or turkey”, amount: “1 lb” },
+{ name: “coleslaw mix (shredded cabbage & carrot)”, amount: “14 oz bag” },
+{ name: “soy sauce (low sodium)”, amount: “3 tbsp” },
+{ name: “sesame oil”, amount: “1 tsp” },
+{ name: “garlic”, amount: “3 cloves, minced” },
+{ name: “ginger (ground)”, amount: “½ tsp” },
+{ name: “green onions”, amount: “2 stalks, sliced (garnish)” },
+{ name: “sesame seeds”, amount: “1 tsp (garnish)” },
+{ name: “lime”, amount: “1, cut into wedges (garnish)” },
+{ name: “sriracha (optional, skip for toddlers)”, amount: “to taste” },
+{ name: “white rice (cooked)”, amount: “2 cups, to serve” },
+],
+notes: “$2.58/serving. Skip sriracha for the kids. Ready in 20 min — super filling.”,
+},
 ];
 
-var breakfasts=[
-  {id:'b1',name:'Greek Yogurt & Mandarins',cost:6,detail:'Lucerne yogurt + clementines',emoji:'🫙',ing:{Dairy:['Lucerne Greek yogurt nonfat plain 32oz'],'Toddler Snacks':['Mandarins clementine 3lb bag']}},
-  {id:'b2',name:'Hash Browns & Eggs',cost:7,detail:'Sig SELECT hash browns + eggs',emoji:'🍳',ing:{Frozen:['Signature SELECT hash brown patties 10ct'],Dairy:['Lucerne Farms eggs 18ct']}},
-  {id:'b3',name:'English Muffin & Eggs',cost:6,detail:'Sourdough muffins + eggs + cheese',emoji:'🥚',ing:{Bread:['Signature SELECT English muffins sourdough 6ct'],Dairy:['Lucerne Farms eggs 18ct','Lucerne Colby Jack slices']}},
-  {id:'b4',name:'Banana & Honey Toast',cost:5,detail:'Sig SELECT honey + bananas',emoji:'🍌',ing:{Produce:['Bananas'],Pantry:['Signature SELECT honey clover'],Bread:['Bread or toast']}},
-  {id:'b5',name:'Vanilla Yogurt & Apples',cost:6,detail:'Lucerne vanilla yogurt + honeycrisp',emoji:'🍎',ing:{Dairy:['Lucerne Greek yogurt nonfat vanilla 32oz'],'Toddler Snacks':['Honeycrisp apples 2lb bag']}},
-  {id:'b6',name:'Kale Scramble Wrap',cost:8,detail:'Kale + eggs + Ole wrap',emoji:'🌯',ing:{Produce:['Cal-Organic kale','2 shallots'],Bread:['Ole Xtreme Wellness tortilla wraps'],Dairy:['Lucerne Farms eggs 18ct']}},
-  {id:'b7',name:'Avocado Egg Toast',cost:7,detail:'Avo + eggs on sourdough muffin',emoji:'🥑',ing:{Produce:['2 avocados','1 lemon'],Bread:['Signature SELECT English muffins sourdough'],Dairy:['Lucerne Farms eggs 18ct']}},
-];
+const TABS = [“📋 Meal Library”, “📅 Weekly Planner”, “🛒 Grocery List”];
 
-var stockItems=[
-  {id:'s1',name:'Chicken Breast',cat:'Meat'},{id:'s2',name:'Lucerne Eggs Cage Free 18ct',cat:'Dairy'},
-  {id:'s3',name:'Lucerne Greek Yogurt Plain',cat:'Dairy'},{id:'s4',name:'Lucerne Greek Yogurt Vanilla',cat:'Dairy'},
-  {id:'s5',name:'Lucerne Mozzarella',cat:'Dairy'},{id:'s6',name:'Lucerne Colby Jack Slices',cat:'Dairy'},
-  {id:'s7',name:'O Organics Milk 2%',cat:'Dairy'},{id:'s8',name:'Chobani Coffee Creamer',cat:'Dairy'},
-  {id:'s9',name:'Barilla Spaghetti',cat:'Pantry'},{id:'s10',name:'De Cecco Fusilli',cat:'Pantry'},
-  {id:'s11',name:'Signature SELECT Rigatoni',cat:'Pantry'},{id:'s12',name:'Jasmine Rice',cat:'Grains'},
-  {id:'s13',name:'Rice Noodles',cat:'Grains'},{id:'s14',name:'Herdez Salsa Verde',cat:'Pantry'},
-  {id:'s15',name:'McCormick Taco Seasoning',cat:'Pantry'},{id:'s16',name:'Rosarita Refried Beans',cat:'Pantry'},
-  {id:'s17',name:'Signature SELECT Black Beans',cat:'Pantry'},{id:'s18',name:'Signature SELECT Cannellini Beans',cat:'Pantry'},
-  {id:'s19',name:'Signature SELECT Pizza Sauce',cat:'Pantry'},{id:'s20',name:'Signature SELECT Pasta Sauce',cat:'Pantry'},
-  {id:'s21',name:'Signature SELECT Honey',cat:'Pantry'},{id:'s22',name:'Soy Sauce',cat:'Pantry'},
-  {id:'s23',name:'Sesame Oil',cat:'Pantry'},{id:'s24',name:'Coconut Milk',cat:'Pantry'},
-  {id:'s25',name:'Peanut Butter',cat:'Pantry'},{id:'s26',name:'O Organics Hummus',cat:'Pantry'},
-  {id:'s27',name:'Snack Factory Pretzel Crisps',cat:'Snacks'},{id:'s28',name:"Juantonio's Tortilla Chips",cat:'Snacks'},
-  {id:'s29',name:'Open Nature Pita Chips',cat:'Snacks'},{id:'s30',name:"Smucker's Uncrustables",cat:'Toddler Snacks'},
-  {id:'s31',name:"Annie's Mac & Cheese",cat:'Toddler Snacks'},{id:'s32',name:'Mandarins / Clementines',cat:'Toddler Snacks'},
-  {id:'s33',name:'Honeycrisp Apples',cat:'Toddler Snacks'},{id:'s34',name:'Avocados',cat:'Produce'},
-  {id:'s35',name:'Bananas',cat:'Produce'},{id:'s36',name:'Garlic Flatbread Naan',cat:'Bread'},
-  {id:'s37',name:'Mission White Corn Tortillas',cat:'Bread'},{id:'s38',name:'Ole Tortilla Wraps',cat:'Bread'},
-  {id:'s39',name:'Signature SELECT English Muffins',cat:'Bread'},{id:'s40',name:'Hash Brown Patties',cat:'Frozen'},
-  {id:'s41',name:'Edamame Shelled',cat:'Frozen'},{id:'s42',name:'Broccoli Florets',cat:'Vegetables'},
-];
+// ─── Dark theme tokens ────────────────────────────────────────────────────────
+const T = {
+bg:         “#0f1117”,   // page background
+surface:    “#181b24”,   // card / panel
+surfaceHi:  “#1f2333”,   // elevated surface
+border:     “#2a2d3a”,   // subtle border
+borderHi:   “#3a3f52”,   // bright border
+gold:       “#e8a844”,   // primary accent
+goldDim:    “#c48a2e”,   // darker gold
+goldFaint:  “rgba(232,168,68,0.12)”, // gold tint bg
+text:       “#e8eaf0”,   // primary text
+textMid:    “#9499ad”,   // secondary text
+textDim:    “#5a5f72”,   // muted text
+green:      “#4ade80”,   // success
+greenFaint: “rgba(74,222,128,0.10)”,
+red:        “#f87171”,
+redFaint:   “rgba(248,113,113,0.12)”,
+};
 
-var cuisines=['all','mexican','italian','japanese','thai','indian','mediterranean','chinese','american','healthy'];
-var cuisineLabels={all:'🍽 All',mexican:'🌮 Mexican',italian:'🍝 Italian',japanese:'🍱 Japanese',thai:'🥜 Thai',indian:'🫕 Indian',mediterranean:'🫙 Mediter.',chinese:'🥢 Chinese',american:'🇺🇸 American',healthy:'🥬 Healthy'};
-var dayMeals={Monday:null,Tuesday:null,Wednesday:null,Thursday:null,Friday:null};
-var openDay=null,selBreakfast=null,flagged={};
+// ─── Styles (defined before use) ─────────────────────────────────────────────
 
-function goPage(id,el){
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
-  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
-  document.getElementById('page-'+id).classList.add('active');
-  el.classList.add('active');
-  if(id==='grocery') renderGrocery();
-  if(id==='stock') renderStock();
+const inputStyle = {
+width: “100%”,
+padding: “9px 13px”,
+borderRadius: 10,
+border: `1.5px solid ${T.border}`,
+fontSize: 14,
+fontFamily: “inherit”,
+background: T.surfaceHi,
+color: T.text,
+boxSizing: “border-box”,
+outline: “none”,
+};
+
+const labelStyle = {
+display: “flex”,
+flexDirection: “column”,
+gap: 4,
+fontSize: 12,
+color: T.textMid,
+fontWeight: 600,
+};
+
+const btn = (bg, color) => ({
+background: bg,
+color,
+border: “none”,
+borderRadius: 8,
+padding: “5px 10px”,
+cursor: “pointer”,
+fontSize: 13,
+fontWeight: 600,
+});
+
+// ─── Persistent storage (window.storage with in-memory fallback) ─────────────
+
+const mem = {};
+async function sGet(key) {
+try {
+const r = await window.storage.get(key);
+return r ? JSON.parse(r.value) : null;
+} catch {
+return mem[key] ?? null;
+}
+}
+async function sSet(key, val) {
+try { await window.storage.set(key, JSON.stringify(val)); }
+catch { mem[key] = val; }
 }
 
-function totalCost(){
-  var c=0;
-  DAYS.forEach(function(d){if(dayMeals[d]) c+=dayMeals[d].cost;});
-  if(selBreakfast) c+=selBreakfast.cost*2;
-  return c;
+// ─── StarRating ───────────────────────────────────────────────────────────────
+
+function StarRating({ value, onChange }) {
+return (
+<div style={{ display: “flex”, gap: 2 }}>
+{[1, 2, 3, 4, 5].map((s) => (
+<span key={s} onClick={() => onChange && onChange(s)}
+style={{ cursor: onChange ? “pointer” : “default”, fontSize: 18, userSelect: “none”,
+color: s <= value ? T.gold : T.textDim, transition: “color 0.15s” }}>★</span>
+))}
+</div>
+);
 }
 
-function updateBudget(){
-  var cost=totalCost(),pct=Math.min(100,(cost/BUDGET)*100);
-  document.getElementById('bAmt').innerHTML='$'+cost+' <small>/ $'+BUDGET+'</small>';
-  var f=document.getElementById('bFill');
-  f.style.width=pct+'%';
-  f.className='budget-fill'+(pct>=100?' over':pct>=80?' warn':'');
+// ─── Tag pill ─────────────────────────────────────────────────────────────────
+
+function Tag({ label }) {
+const map = {
+healthy:       { bg: “rgba(74,222,128,0.12)”,  color: “#4ade80” },
+“kid-friendly”:{ bg: “rgba(232,168,68,0.14)”,  color: “#e8a844” },
+budget:        { bg: “rgba(96,165,250,0.12)”,  color: “#60a5fa” },
+};
+const c = map[label] || { bg: T.surfaceHi, color: T.textMid };
+return (
+<span style={{ background: c.bg, color: c.color, borderRadius: 99,
+padding: “2px 10px”, fontSize: 11, fontWeight: 600, letterSpacing: 0.3 }}>
+{label}
+</span>
+);
 }
 
-function buildRecipeHTML(m){
-  var html='<div class="recipe-header">📋 '+m.emoji+' '+m.name+' — Ingredients</div>';
-  Object.keys(m.ing).forEach(function(cat){
-    html+='<div class="recipe-section"><div class="recipe-cat-label">'+cat+'</div><div class="recipe-tags">';
-    m.ing[cat].forEach(function(item){html+='<span class="rtag">'+item+'</span>';});
-    html+='</div></div>';
+const CUISINE_COLORS = {
+“American”:      { bg: “rgba(232,168,68,0.14)”,  color: “#e8a844”,  icon: “🍔” },
+“Italian”:       { bg: “rgba(248,113,113,0.13)”,  color: “#f87171”,  icon: “🍝” },
+“Mexican”:       { bg: “rgba(251,191,36,0.13)”,   color: “#fbbf24”,  icon: “🌮” },
+“Asian”:         { bg: “rgba(96,165,250,0.13)”,   color: “#60a5fa”,  icon: “🍜” },
+“Mediterranean”: { bg: “rgba(52,211,153,0.13)”,   color: “#34d399”,  icon: “🫒” },
+“Crock Pot”:     { bg: “rgba(167,139,250,0.13)”,  color: “#a78bfa”,  icon: “🍲” },
+};
+
+function CuisineBadge({ cuisine }) {
+if (!cuisine) return null;
+const c = CUISINE_COLORS[cuisine] || { bg: T.surfaceHi, color: T.textMid, icon: “🍽” };
+return (
+<span style={{
+background: c.bg, color: c.color, borderRadius: 99,
+padding: “2px 9px”, fontSize: 11, fontWeight: 700,
+display: “inline-flex”, alignItems: “center”, gap: 3,
+}}>
+{c.icon} {cuisine}
+</span>
+);
+}
+
+// Each ingredient is { name, amount } or a legacy plain string (graceful fallback)
+function ingName(ing) { return typeof ing === “string” ? ing : ing.name; }
+function ingAmount(ing) { return typeof ing === “string” ? “” : ing.amount; }
+
+function IngredientList({ ingredients, small }) {
+return (
+<div style={{ display: “flex”, flexWrap: “wrap”, gap: small ? “3px 6px” : “4px 8px” }}>
+{ingredients.map((ing, i) => {
+const name = ingName(ing);
+const amount = ingAmount(ing);
+return (
+<span key={i} style={{
+fontSize: small ? 11 : 12, color: T.text,
+background: T.surfaceHi, border: `1px solid ${T.border}`, borderRadius: 6,
+padding: small ? “1px 6px” : “2px 8px”,
+display: “inline-flex”, alignItems: “center”, gap: 4,
+}}>
+{amount && (
+<span style={{ fontWeight: 700, color: T.gold, fontSize: small ? 10 : 11 }}>
+{amount}
+</span>
+)}
+<span style={{ textTransform: “capitalize” }}>{name}</span>
+</span>
+);
+})}
+</div>
+);
+}
+
+// ─── MealCard ────────────────────────────────────────────────────────────────
+
+function MealCard({ meal, onEdit, onDelete, compact, onSelect, selected }) {
+const [showIngredients, setShowIngredients] = useState(false);
+const toggle = (e) => { e.stopPropagation(); setShowIngredients((v) => !v); };
+
+return (
+<div onClick={onSelect ? () => onSelect(meal) : undefined}
+style={{
+background: selected ? “rgba(232,168,68,0.10)” : T.surface,
+border: selected ? `2px solid ${T.gold}` : `1.5px solid ${T.border}`,
+borderRadius: 14,
+padding: compact ? “10px 14px” : “16px 18px”,
+cursor: onSelect ? “pointer” : “default”,
+transition: “border-color 0.15s, background 0.15s”,
+boxShadow: selected ? `0 0 0 3px rgba(232,168,68,0.15)` : “none”,
+}}>
+<div style={{ display: “flex”, justifyContent: “space-between”, alignItems: “flex-start”, gap: 8 }}>
+<div style={{ flex: 1, minWidth: 0 }}>
+{/* Name + time */}
+<div style={{ display: “flex”, alignItems: “center”, gap: 8, flexWrap: “wrap” }}>
+<span style={{ fontFamily: “‘Cormorant Garamond’, ‘Georgia’, serif”,
+fontSize: compact ? 15 : 18, fontWeight: 700, color: T.text }}>
+{meal.name}
+</span>
+<span style={{ fontSize: 11, color: T.textMid, background: T.surfaceHi,
+borderRadius: 6, padding: “1px 7px”, border: `1px solid ${T.border}` }}>
+⏱ {meal.time}min
+</span>
+</div>
+
+```
+      {/* Tags + Cuisine */}
+      <div style={{ display: "flex", gap: 4, marginTop: 6, flexWrap: "wrap", alignItems: "center" }}>
+        {meal.cuisine && <CuisineBadge cuisine={meal.cuisine} />}
+        {meal.tags.map((t) => <Tag key={t} label={t} />)}
+      </div>
+
+      {/* Notes */}
+      {!compact && meal.notes && (
+        <p style={{ margin: "7px 0 0", fontSize: 12, color: T.textMid, fontStyle: "italic" }}>
+          {meal.notes}
+        </p>
+      )}
+
+      {/* Actions row — full card */}
+      {!compact && (
+        <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <StarRating value={meal.rating} />
+          {meal.recipeUrl && (() => {
+            const host = (() => { try { return new URL(meal.recipeUrl).hostname.replace("www.", ""); } catch { return null; } })();
+            const SOURCE_LABELS = { "tasty.co": "Tasty", "halfbakedharvest.com": "Half Baked Harvest", "budgetbytes.com": "Budget Bytes", "allrecipes.com": "AllRecipes" };
+            const label = SOURCE_LABELS[host] || host;
+            return (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {label && (
+                  <span style={{ fontSize: 10, color: T.textDim, background: T.surfaceHi,
+                    borderRadius: 4, padding: "1px 6px", fontWeight: 600, border: `1px solid ${T.border}` }}>
+                    {label}
+                  </span>
+                )}
+                <a href={meal.recipeUrl} target="_blank" rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ fontSize: 12, color: T.gold, textDecoration: "none", display: "flex", alignItems: "center", gap: 3 }}>
+                  🔗 Full Recipe
+                </a>
+              </div>
+            );
+          })()}
+          <button type="button" onClick={toggle}
+            style={{ ...btn(T.surfaceHi, T.textMid), fontSize: 11, padding: "3px 10px", border: `1px solid ${T.border}` }}>
+            {showIngredients ? "▲ Hide" : "▼ Ingredients"}
+          </button>
+        </div>
+      )}
+
+      {/* Ingredient expand — full */}
+      {!compact && showIngredients && (
+        <div style={{ marginTop: 10, background: T.bg, border: `1px solid ${T.border}`,
+          borderRadius: 10, padding: "10px 12px" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: T.textDim, marginBottom: 8,
+            textTransform: "uppercase", letterSpacing: 1 }}>Ingredients</div>
+          <IngredientList ingredients={meal.ingredients} />
+        </div>
+      )}
+
+      {/* Actions row — compact */}
+      {compact && (
+        <div style={{ display: "flex", gap: 8, marginTop: 6, alignItems: "center" }}>
+          <button type="button" onClick={toggle}
+            style={{ ...btn(T.surfaceHi, T.textMid), fontSize: 11, padding: "2px 8px", border: `1px solid ${T.border}` }}>
+            {showIngredients ? "▲ ingredients" : "▼ ingredients"}
+          </button>
+          {meal.recipeUrl && (
+            <a href={meal.recipeUrl} target="_blank" rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              style={{ fontSize: 12, color: T.gold, textDecoration: "none" }}>
+              🔗 Recipe
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Ingredient expand — compact */}
+      {compact && showIngredients && (
+        <div style={{ marginTop: 8, background: T.bg, border: `1px solid ${T.border}`,
+          borderRadius: 10, padding: "8px 10px" }}>
+          <IngredientList ingredients={meal.ingredients} small />
+        </div>
+      )}
+    </div>
+
+    {/* Edit / Delete */}
+    {!compact && onEdit && (
+      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+        <button type="button" onClick={(e) => { e.stopPropagation(); onEdit(meal); }}
+          style={{ ...btn(T.surfaceHi, T.textMid), border: `1px solid ${T.border}` }}>✏️</button>
+        <button type="button" onClick={(e) => { e.stopPropagation(); onDelete(meal.id); }}
+          style={{ ...btn(T.redFaint, T.red), border: `1px solid rgba(248,113,113,0.2)` }}>🗑</button>
+      </div>
+    )}
+  </div>
+</div>
+```
+
+);
+}
+
+// ─── MealForm ─────────────────────────────────────────────────────────────────
+// Ingredients entered one per line as “amount: name”, e.g. “1 lb: chicken breast”
+
+function ingredientsToText(ingredients) {
+return ingredients
+.map((ing) => typeof ing === “string” ? ing : `${ing.amount}: ${ing.name}`)
+.join(”\n”);
+}
+
+function textToIngredients(text) {
+return text.split(”\n”).map((line) => {
+const trimmed = line.trim();
+if (!trimmed) return null;
+const colonIdx = trimmed.indexOf(”:”);
+if (colonIdx === -1) return { name: trimmed, amount: “” };
+const amount = trimmed.slice(0, colonIdx).trim();
+const name = trimmed.slice(colonIdx + 1).trim();
+return { name: name || trimmed, amount };
+}).filter(Boolean);
+}
+
+function MealForm({ initial, onSave, onCancel }) {
+const blank = { name: “”, cuisine: “American”, time: 30, rating: 4, tags: [], recipeUrl: “”, ingredients: “”, notes: “” };
+const [form, setForm] = useState(
+initial
+? { …initial, ingredients: ingredientsToText(initial.ingredients) }
+: blank
+);
+const allTags = [“healthy”, “kid-friendly”, “budget”];
+const allCuisines = Object.keys(CUISINE_COLORS);
+const toggleTag = (t) =>
+setForm((f) => ({ …f, tags: f.tags.includes(t) ? f.tags.filter((x) => x !== t) : […f.tags, t] }));
+
+const handleSave = () => {
+if (!form.name.trim()) return;
+onSave({
+…form,
+id: initial?.id || Date.now().toString(),
+time: Number(form.time) || 30,
+rating: Number(form.rating) || 4,
+ingredients: textToIngredients(form.ingredients),
+});
+};
+
+return (
+<div style={{ background: T.surface, border: `1.5px solid ${T.gold}40`, borderRadius: 16,
+padding: 20, display: “flex”, flexDirection: “column”, gap: 12 }}>
+<h3 style={{ margin: 0, fontFamily: “‘Cormorant Garamond’,‘Georgia’,serif”, fontSize: 20, color: T.text }}>
+{initial ? “Edit Meal” : “Add New Meal”}
+</h3>
+<input value={form.name} onChange={(e) => setForm((f) => ({ …f, name: e.target.value }))}
+placeholder=“Meal name” style={inputStyle} />
+<div style={{ display: “flex”, gap: 10, alignItems: “flex-end”, flexWrap: “wrap” }}>
+<label style={labelStyle}>
+Cuisine
+<select value={form.cuisine} onChange={(e) => setForm((f) => ({ …f, cuisine: e.target.value }))}
+style={{ …inputStyle, width: “auto”, paddingRight: 28 }}>
+{allCuisines.map((c) => <option key={c} value={c}>{CUISINE_COLORS[c].icon} {c}</option>)}
+</select>
+</label>
+<label style={labelStyle}>
+Prep time (min)
+<input type=“number” value={form.time}
+onChange={(e) => setForm((f) => ({ …f, time: e.target.value }))}
+style={{ …inputStyle, width: 90 }} />
+</label>
+<label style={{ …labelStyle, flex: 1 }}>
+Rating
+<StarRating value={form.rating} onChange={(r) => setForm((f) => ({ …f, rating: r }))} />
+</label>
+</div>
+<div>
+<div style={{ fontSize: 12, color: T.textMid, marginBottom: 5, fontWeight: 600 }}>Tags</div>
+<div style={{ display: “flex”, gap: 6, flexWrap: “wrap” }}>
+{allTags.map((t) => (
+<button key={t} type=“button” onClick={() => toggleTag(t)}
+style={{
+…btn(form.tags.includes(t) ? T.goldFaint : T.surfaceHi,
+form.tags.includes(t) ? T.gold : T.textMid),
+border: form.tags.includes(t) ? `1.5px solid ${T.gold}60` : `1.5px solid ${T.border}`,
+}}>
+{t}
+</button>
+))}
+</div>
+</div>
+<input value={form.recipeUrl}
+onChange={(e) => setForm((f) => ({ …f, recipeUrl: e.target.value }))}
+placeholder=“Recipe URL (optional)” style={inputStyle} />
+<div>
+<div style={{ fontSize: 12, color: T.textMid, marginBottom: 4, fontWeight: 600 }}>
+Ingredients <span style={{ fontWeight: 400, color: T.textDim }}>(one per line — amount: name)</span>
+</div>
+<div style={{ fontSize: 11, color: T.textDim, marginBottom: 6 }}>
+e.g.  <code style={{ background: T.bg, padding: “1px 5px”, borderRadius: 4, color: T.gold }}>1 lb: chicken breast</code>
+  
+<code style={{ background: T.bg, padding: “1px 5px”, borderRadius: 4, color: T.gold }}>2 cups: broccoli</code>
+</div>
+<textarea value={form.ingredients}
+onChange={(e) => setForm((f) => ({ …f, ingredients: e.target.value }))}
+placeholder={“1 lb: chicken breast\n2 cups: broccoli\n1 tbsp: olive oil”}
+style={{ …inputStyle, resize: “vertical”, minHeight: 110, lineHeight: 1.7 }} />
+</div>
+<input value={form.notes}
+onChange={(e) => setForm((f) => ({ …f, notes: e.target.value }))}
+placeholder=“Notes (optional)” style={inputStyle} />
+<div style={{ display: “flex”, gap: 8 }}>
+<button type=“button” onClick={handleSave}
+style={{ …btn(T.gold, “#0f1117”), flex: 1, padding: “10px 0”, fontSize: 14, fontWeight: 700 }}>
+{initial ? “Save Changes” : “Add Meal”}
+</button>
+<button type=“button” onClick={onCancel}
+style={{ …btn(T.surfaceHi, T.textMid), padding: “10px 18px”, border: `1px solid ${T.border}` }}>
+Cancel
+</button>
+</div>
+</div>
+);
+}
+
+// ─── Main App ─────────────────────────────────────────────────────────────────
+
+export default function App() {
+const [meals, setMeals] = useState(DEFAULT_MEALS);
+const [week, setWeek] = useState({});
+const [loaded, setLoaded] = useState(false);
+
+const [tab, setTab] = useState(0);
+const [editingMeal, setEditingMeal] = useState(null);
+const [showAddForm, setShowAddForm] = useState(false);
+const [selectingFor, setSelectingFor] = useState(null);
+const [filterTag, setFilterTag] = useState(“all”);
+const [filterCuisine, setFilterCuisine] = useState(“all”);
+const [search, setSearch] = useState(””);
+const [copied, setCopied] = useState(false);
+
+// Planner picker filters (separate from library filters)
+const [plannerSearch, setPlannerSearch] = useState(””);
+const [plannerCuisine, setPlannerCuisine] = useState(“all”);
+const [plannerTag, setPlannerTag] = useState(“all”);
+
+// Load from storage on mount
+useEffect(() => {
+(async () => {
+const savedMeals = await sGet(STORAGE_KEY);
+const savedWeek = await sGet(WEEK_KEY);
+if (savedMeals) setMeals(savedMeals);
+if (savedWeek) setWeek(savedWeek);
+setLoaded(true);
+})();
+}, []);
+
+useEffect(() => { if (loaded) sSet(STORAGE_KEY, meals); }, [meals, loaded]);
+useEffect(() => { if (loaded) sSet(WEEK_KEY, week); }, [week, loaded]);
+
+const saveMeal = (meal) => {
+setMeals((ms) => editingMeal ? ms.map((m) => m.id === meal.id ? meal : m) : […ms, meal]);
+setEditingMeal(null);
+setShowAddForm(false);
+};
+
+const deleteMeal = (id) => {
+setMeals((ms) => ms.filter((m) => m.id !== id));
+setWeek((w) => {
+const n = { …w };
+Object.keys(n).forEach((d) => { if (n[d] === id) delete n[d]; });
+return n;
+});
+};
+
+const assignMeal = (meal) => {
+if (!selectingFor) return;
+setWeek((w) => ({ …w, [selectingFor]: meal.id }));
+setSelectingFor(null);
+setPlannerSearch(””);
+setPlannerCuisine(“all”);
+setPlannerTag(“all”);
+};
+
+const getGroceries = () => {
+// Unit normalization map — collapses aliases to a canonical unit
+const UNIT_ALIASES = {
+lb: “lbs”, pound: “lbs”, pounds: “lbs”,
+oz: “oz”, ounce: “oz”, ounces: “oz”,
+cup: “cups”, c: “cups”,
+tbsp: “tbsp”, tablespoon: “tbsp”, tablespoons: “tbsp”,
+tsp: “tsp”, teaspoon: “tsp”, teaspoons: “tsp”,
+clove: “cloves”, cloves: “cloves”,
+piece: “pieces”, pieces: “pieces”,
+pack: “packs”, packet: “packets”, packets: “packets”,
+can: “cans”, cans: “cans”,
+};
+
+```
+// Parse "1.5 lbs" → { qty: 1.5, unit: "lbs", rest: "" }
+// Also handles "2 medium", "4 cloves, minced" → qty + unit + descriptor
+const parseAmount = (amountStr) => {
+  if (!amountStr) return null;
+  // Match leading number (int or decimal or fraction like ½ ¼ ⅓ ¾)
+  const FRACTIONS = { "½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 0.333, "⅔": 0.667, "⅛": 0.125 };
+  let str = amountStr.trim();
+  // Replace unicode fractions
+  Object.entries(FRACTIONS).forEach(([sym, val]) => { str = str.replace(sym, val); });
+  const match = str.match(/^(\d+(?:\.\d+)?)\s*([a-zA-Z]*)(.*)/);
+  if (!match) return null;
+  const qty = parseFloat(match[1]);
+  const rawUnit = match[2].toLowerCase().trim();
+  const descriptor = match[3].trim(); // e.g. ", minced" or "halved"
+  const unit = UNIT_ALIASES[rawUnit] || rawUnit || "unit";
+  return { qty, unit, descriptor };
+};
+
+// Group all ingredients by normalized name
+// map[name] = [ { qty, unit, descriptor, originalAmount } ]
+const map = {};
+
+Object.values(week).forEach((id) => {
+  const m = meals.find((x) => x.id === id);
+  if (!m) return;
+  m.ingredients.forEach((ing) => {
+    const rawName = typeof ing === "string" ? ing : ing.name;
+    const rawAmount = typeof ing === "string" ? "" : (ing.amount || "");
+    const key = rawName.toLowerCase().trim();
+
+    if (!map[key]) map[key] = { name: rawName, entries: [] };
+    map[key].entries.push({ rawAmount, parsed: parseAmount(rawAmount) });
   });
-  return html;
-}
+});
 
-function renderPlan(){
-  updateBudget();
-  var html='';
-  cuisines.forEach(function(c){html+='<div class="ctag'+(activeCuisine===c?' active':'')+'" data-cuisine="'+c+'">'+cuisineLabels[c]+'</div>';});
-  document.getElementById('cuisineFilter').innerHTML=html;
+// Combine entries for each ingredient
+return Object.values(map)
+  .map(({ name, entries }) => {
+    if (entries.length === 1) {
+      return { name, amount: entries[0].rawAmount };
+    }
 
-  var filtered=activeCuisine==='all'?meals:meals.filter(function(m){return m.cat===activeCuisine;});
-  var dHtml='';
-  DAYS.forEach(function(day){
-    var meal=dayMeals[day],isOpen=openDay===day;
-    var chips='';
-    filtered.forEach(function(m){
-      var isSel=meal&&meal.id===m.id;
-      var rkey=day+'-'+m.id;
-      var rOpen=openRecipe===rkey;
-      chips+=
-        '<div class="chip '+m.cat+(isSel?' sel':'')+'" data-day="'+day+'" data-mid="'+m.id+'">'+
-          '<div class="chip-left"><span>'+m.emoji+'</span><span class="chip-name">'+m.name+'</span>'+(m.spicy?'<span class="spicy-note">🌶️</span>':'')+' </div>'+
-          '<div class="chip-right"><span class="chip-meta">$'+m.cost+' · '+m.time+'</span><span class="expand-icon" data-rkey="'+rkey+'">'+(rOpen?'▲':'▼')+'</span></div>'+
-        '</div>'+
-        '<div class="recipe-panel'+(rOpen?' open':'')+'">'+
-          buildRecipeHTML(m)+
-          '<div class="recipe-actions">'+
-            '<button class="btn-pick" data-pday="'+day+'" data-pmid="'+m.id+'">✓ Add to '+day+'</button>'+
-            '<button class="btn-close" data-rkey="'+rkey+'">Close</button>'+
-          '</div>'+
-        '</div>';
+    // Try to sum entries that share the same unit
+    const byUnit = {};
+    const unparseable = [];
+
+    entries.forEach(({ rawAmount, parsed }) => {
+      if (!parsed) {
+        unparseable.push(rawAmount || "");
+        return;
+      }
+      const { qty, unit, descriptor } = parsed;
+      if (!byUnit[unit]) byUnit[unit] = { total: 0, descriptor };
+      byUnit[unit].total += qty;
+      // Keep the most descriptive descriptor
+      if (descriptor && descriptor.length > (byUnit[unit].descriptor || "").length) {
+        byUnit[unit].descriptor = descriptor;
+      }
     });
-    if(meal) chips+='<button class="clear-btn" data-clear="'+day+'">✕ Clear '+day+'</button>';
-    dHtml+=
-      '<div class="day-card'+(meal?' picked':'')+'">'+
-        '<div class="day-hd" data-tog="'+day+'">'+
-          '<div class="day-name">'+day+'</div>'+
-          '<div class="day-meal'+(meal?' set':'')+'">'+( meal?meal.emoji+' '+meal.name:'tap to pick')+'</div>'+
-          '<div class="day-cost'+(meal?' set':'')+'">'+( meal?'$'+meal.cost:'')+'</div>'+
-        '</div>'+
-        '<div class="picker'+(isOpen?' open':'')+'">'+chips+'</div>'+
-      '</div>';
-  });
-  document.getElementById('dinnerDays').innerHTML=dHtml;
 
-  var bHtml='';
-  breakfasts.forEach(function(b){
-    var isSel=selBreakfast&&selBreakfast.id===b.id;
-    bHtml+='<div class="bfast-card'+(isSel?' sel':'')+'" data-bid="'+b.id+'"><div class="bfast-icon">'+b.emoji+'</div><div class="bfast-name">'+b.name+'</div><div class="bfast-detail">'+b.detail+'</div><div class="bfast-cost">~$'+b.cost+'/wk</div></div>';
-  });
-  document.getElementById('bfastGrid').innerHTML=bHtml;
-}
+    const unitParts = Object.entries(byUnit).map(([unit, { total, descriptor }]) => {
+      // Format nicely: remove trailing .0, keep up to 2 decimal places
+      const qty = parseFloat(total.toFixed(2));
+      const desc = descriptor ? ` ${descriptor.replace(/^,\s*/, "")}` : "";
+      return `${qty} ${unit}${desc}`.trim();
+    });
 
-document.getElementById('page-plan').addEventListener('click',function(e){
-  var ctag=e.target.closest('[data-cuisine]');
-  var rkey=e.target.closest('[data-rkey]');
-  var pickBtn=e.target.closest('[data-pday]');
-  var chip=e.target.closest('[data-mid]');
-  var clr=e.target.closest('[data-clear]');
-  var tog=e.target.closest('[data-tog]');
-  var bid=e.target.closest('[data-bid]');
+    const allParts = [...unitParts, ...unparseable.filter(Boolean)];
+    return { name, amount: allParts.join(" + ") };
+  })
+  .sort((a, b) => a.name.localeCompare(b.name));
+```
 
-  if(ctag){activeCuisine=ctag.dataset.cuisine;renderPlan();}
-  else if(pickBtn){
-    var mid=parseInt(pickBtn.dataset.pmid);
-    dayMeals[pickBtn.dataset.pday]=meals.find(function(m){return m.id===mid;});
-    openDay=null;openRecipe=null;renderPlan();
-  }
-  else if(rkey){
-    var k=rkey.dataset.rkey;
-    openRecipe=openRecipe===k?null:k;
-    renderPlan();
-  }
-  else if(chip&&!e.target.closest('[data-rkey]')&&!e.target.closest('[data-pday]')){
-    var k2=chip.dataset.day+'-'+chip.dataset.mid;
-    openRecipe=openRecipe===k2?null:k2;
-    renderPlan();
-  }
-  else if(clr){dayMeals[clr.dataset.clear]=null;openDay=null;openRecipe=null;renderPlan();}
-  else if(tog){openDay=openDay===tog.dataset.tog?null:tog.dataset.tog;openRecipe=null;renderPlan();}
-  else if(bid){
-    var found=breakfasts.find(function(b){return b.id===bid.dataset.bid;});
-    selBreakfast=(selBreakfast&&selBreakfast.id===bid.dataset.bid)?null:found;
-    renderPlan();
-  }
+};
+
+const groceries = getGroceries();
+const weeklyMealCount = Object.values(week).filter(Boolean).length;
+
+const filteredMeals = meals.filter((m) => {
+const tagOk = filterTag === “all” || m.tags.includes(filterTag);
+const cuisineOk = filterCuisine === “all” || m.cuisine === filterCuisine;
+const searchOk = !search || m.name.toLowerCase().includes(search.toLowerCase());
+return tagOk && cuisineOk && searchOk;
 });
 
-function buildIngr(){
-  var map={};
-  function add(cat,items){if(!map[cat])map[cat]=[];items.forEach(function(i){if(map[cat].indexOf(i)<0)map[cat].push(i);});}
-  DAYS.forEach(function(d){var meal=dayMeals[d];if(!meal)return;Object.keys(meal.ing).forEach(function(cat){add(cat,meal.ing[cat]);});});
-  if(selBreakfast)Object.keys(selBreakfast.ing).forEach(function(cat){add(cat,selBreakfast.ing[cat]);});
-  stockItems.forEach(function(s){if(flagged[s.id])add(s.cat,[s.name+' ⚠️ (low stock)']);});
-  return map;
-}
-
-function renderGrocery(){
-  var map=buildIngr(),cats=Object.keys(map);
-  var total=cats.reduce(function(s,c){return s+map[c].length;},0);
-  document.getElementById('gCount').textContent=total+' items';
-  document.getElementById('gCost').textContent='$'+totalCost();
-  if(!cats.length){document.getElementById('grocList').innerHTML='<div class="empty"><div style="font-size:32px;margin-bottom:10px">🛒</div>Pick meals on the Plan tab and your list appears here automatically.</div>';return;}
-  var html='';
-  cats.forEach(function(cat){
-    html+='<div class="ingr-block"><div class="ingr-hd"><span class="ingr-cat">'+cat+'</span><span class="ingr-ct">'+map[cat].length+' items</span></div>';
-    map[cat].forEach(function(item){html+='<div class="ingr-row"><div class="dot"></div><div>'+item+'</div></div>';});
-    html+='</div>';
-  });
-  document.getElementById('grocList').innerHTML=html;
-}
-
-function copyGrocery(){
-  var map=buildIngr(),lines=['🛒 Weekly Grocery List',''];
-  Object.keys(map).forEach(function(cat){lines.push('── '+cat+' ──');map[cat].forEach(function(i){lines.push('  • '+i);});lines.push('');});
-  lines.push('Est. budget: $'+totalCost()+' / $'+BUDGET);
-  navigator.clipboard.writeText(lines.join('\n')).then(function(){
-    var btn=document.getElementById('copyBtn');btn.textContent='✓ Copied!';btn.classList.add('done');
-    setTimeout(function(){btn.textContent='📋 Copy Grocery List';btn.classList.remove('done');},2000);
-  });
-}
-
-function renderStock(){
-  var fl=stockItems.filter(function(s){return flagged[s.id];});
-  var banner=document.getElementById('flagBanner');
-  if(fl.length){banner.textContent='⚠️ '+fl.length+' item'+(fl.length>1?'s':'')+' flagged — added to grocery list';banner.classList.add('show');}
-  else banner.classList.remove('show');
-  var html='';
-  stockItems.forEach(function(s){
-    var f=flagged[s.id];
-    html+='<div class="stock-row'+(f?' flagged':'')+'" data-sid="'+s.id+'"><div class="stock-icon">'+(f?'⚠️':'')+'</div><div><div class="stock-name">'+s.name+'</div><div class="stock-sub">'+(f?'Flagged · added to list':s.cat)+'</div></div></div>';
-  });
-  document.getElementById('stockList').innerHTML=html;
-}
-
-document.getElementById('page-stock').addEventListener('click',function(e){
-  var row=e.target.closest('[data-sid]');
-  if(!row)return;
-  flagged[row.dataset.sid]=!flagged[row.dataset.sid];
-  renderStock();
+const copyList = () => {
+const lines = DAYS.map((d) => {
+const m = meals.find((x) => x.id === week[d]);
+return `${d}: ${m ? m.name : "—"}`;
 });
+const ingLines = groceries.map((ing) =>
+ing.amount ? `• ${ing.amount}  ${ing.name}` : `• ${ing.name}`
+);
+const text = `🗓 THIS WEEK'S MEALS\n${lines.join("\n")}\n\n🛒 GROCERY LIST\n${ingLines.join("\n")}`;
+navigator.clipboard.writeText(text).then(() => {
+setCopied(true);
+setTimeout(() => setCopied(false), 2500);
+});
+};
 
-renderPlan();
-</script>
+return (
+<div style={{ fontFamily: “‘Outfit’,‘Segoe UI’,sans-serif”, background: T.bg,
+minHeight: “100vh”, maxWidth: 680, margin: “0 auto”, padding: “16px 12px 48px”,
+color: T.text }}>
 
-</body>
-</html>
+```
+  {/* Google Fonts */}
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@400;500;600;700&display=swap');
+    input::placeholder, textarea::placeholder { color: ${T.textDim}; }
+    input, textarea, select { color-scheme: dark; }
+    select option { background: ${T.surfaceHi}; color: ${T.text}; }
+    * { box-sizing: border-box; }
+  `}</style>
+
+  {/* Header */}
+  <div style={{ textAlign: "center", padding: "28px 0 20px" }}>
+    <div style={{ fontSize: 40, marginBottom: 6 }}>🥘</div>
+    <h1 style={{ margin: 0, fontFamily: "'Cormorant Garamond','Georgia',serif", fontSize: 32,
+      fontWeight: 700, color: T.text, letterSpacing: 0.5, lineHeight: 1.1 }}>
+      Mechelle's Meal Planner
+    </h1>
+    <p style={{ margin: "6px 0 0", fontSize: 13, color: T.textMid, letterSpacing: 0.2 }}>
+      {meals.length} saved meals&nbsp;·&nbsp;{weeklyMealCount}/7 nights planned
+    </p>
+  </div>
+
+  {/* Tabs */}
+  <div style={{ display: "flex", background: T.surface, borderRadius: 12,
+    padding: 4, marginBottom: 22, gap: 2, border: `1px solid ${T.border}` }}>
+    {TABS.map((t, i) => (
+      <button key={i} type="button" onClick={() => setTab(i)}
+        style={{
+          flex: 1, border: "none", borderRadius: 9, padding: "9px 4px",
+          cursor: "pointer", fontSize: 12, fontWeight: 600, transition: "all 0.15s",
+          background: tab === i ? T.surfaceHi : "transparent",
+          color: tab === i ? T.gold : T.textMid,
+          boxShadow: tab === i ? `0 0 0 1px ${T.border}` : "none",
+        }}>
+        {t}
+      </button>
+    ))}
+  </div>
+
+  {/* ── MEAL LIBRARY ── */}
+  {tab === 0 && (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+      {/* Chat tip */}
+      <div style={{ background: T.greenFaint, border: `1.5px solid rgba(74,222,128,0.2)`,
+        borderRadius: 12, padding: "11px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontSize: 20 }}>💬</span>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.green }}>
+            Need a new recipe idea?
+          </div>
+          <div style={{ fontSize: 12, color: "#86efac", marginTop: 1 }}>
+            Ask Claude in chat — e.g. "suggest a toddler-friendly 30-min chicken dinner" — then use + Add Meal to save it here.
+          </div>
+        </div>
+      </div>
+
+      <input value={search} onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search meals..." style={inputStyle} />
+
+      {/* Cuisine filter */}
+      <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+        {["all", ...Object.keys(CUISINE_COLORS)].map((c) => {
+          const icon = c === "all" ? "🍽" : CUISINE_COLORS[c].icon;
+          const active = filterCuisine === c;
+          const cc = c !== "all" ? CUISINE_COLORS[c] : null;
+          return (
+            <button key={c} type="button" onClick={() => setFilterCuisine(c)}
+              style={{
+                ...btn(active ? (cc ? cc.bg : T.goldFaint) : T.surfaceHi,
+                       active ? (cc ? cc.color : T.gold) : T.textMid),
+                fontSize: 11, padding: "4px 10px",
+                border: active ? `1.5px solid ${cc ? cc.color : T.gold}40` : `1.5px solid ${T.border}`,
+                fontWeight: active ? 700 : 500,
+              }}>
+              {icon} {c === "all" ? "All Cuisines" : c}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tag filter + Add button */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+        {["all", "healthy", "kid-friendly", "budget"].map((t) => (
+          <button key={t} type="button" onClick={() => setFilterTag(t)}
+            style={{
+              ...btn(filterTag === t ? T.goldFaint : T.surfaceHi,
+                     filterTag === t ? T.gold : T.textMid),
+              fontSize: 12, padding: "5px 12px",
+              border: filterTag === t ? `1.5px solid ${T.gold}50` : `1.5px solid ${T.border}`,
+            }}>
+            {t === "all" ? "All Tags" : t}
+          </button>
+        ))}
+        <button type="button"
+          onClick={() => { setShowAddForm(true); setEditingMeal(null); }}
+          style={{ ...btn(T.gold, "#0f1117"), marginLeft: "auto", fontSize: 12,
+            padding: "5px 14px", fontWeight: 700 }}>
+          + Add Meal
+        </button>
+      </div>
+
+      {showAddForm && !editingMeal && (
+        <MealForm onSave={saveMeal} onCancel={() => setShowAddForm(false)} />
+      )}
+
+      {filteredMeals.length === 0 && (
+        <div style={{ textAlign: "center", padding: 40, color: T.textDim, fontSize: 14 }}>
+          No meals found. Add one above or ask Claude in chat!
+        </div>
+      )}
+
+      {filteredMeals.map((meal) =>
+        editingMeal?.id === meal.id ? (
+          <MealForm key={meal.id} initial={editingMeal} onSave={saveMeal}
+            onCancel={() => setEditingMeal(null)} />
+        ) : (
+          <MealCard key={meal.id} meal={meal}
+            onEdit={setEditingMeal} onDelete={deleteMeal} />
+        )
+      )}
+    </div>
+  )}
+
+  {/* ── WEEKLY PLANNER ── */}
+  {tab === 1 && (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <p style={{ margin: "0 0 6px", fontSize: 13, color: T.textMid }}>
+        Tap a day to pick a meal. Expand ▼ ingredients before adding. Hit ✕ to clear.
+      </p>
+
+      {selectingFor && (
+        <div style={{ background: T.goldFaint, border: `1.5px solid ${T.gold}40`,
+          borderRadius: 12, padding: "10px 14px", fontSize: 13, fontWeight: 600, color: T.gold }}>
+          Picking meal for <strong>{selectingFor}</strong> — tap a meal below ↓
+        </div>
+      )}
+
+      {DAYS.map((day) => {
+        const assigned = meals.find((m) => m.id === week[day]);
+        return (
+          <div key={day} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+            <div style={{ width: 88, fontSize: 13, fontWeight: 700,
+              color: T.textMid, flexShrink: 0, paddingTop: 12 }}>
+              {day}
+            </div>
+            <div style={{ flex: 1 }}>
+              {assigned ? (
+                <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+                  <div style={{ flex: 1 }}>
+                    <MealCard meal={assigned} compact />
+                  </div>
+                  <button type="button"
+                    onClick={() => setWeek((w) => { const n = { ...w }; delete n[day]; return n; })}
+                    style={{ ...btn(T.redFaint, T.red), flexShrink: 0,
+                      fontSize: 11, padding: "4px 8px", marginTop: 2,
+                      border: `1px solid rgba(248,113,113,0.2)` }}>
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button type="button"
+                  onClick={() => setSelectingFor(selectingFor === day ? null : day)}
+                  style={{
+                    width: "100%", padding: "10px", borderRadius: 10, cursor: "pointer",
+                    fontSize: 13, fontWeight: 600, transition: "all 0.15s", background: "transparent",
+                    border: selectingFor === day ? `2px dashed ${T.gold}` : `2px dashed ${T.border}`,
+                    color: selectingFor === day ? T.gold : T.textDim,
+                  }}>
+                  {selectingFor === day ? "← cancel" : "+ Pick a meal"}
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Meal picker with filters */}
+      {selectingFor && (
+        <div style={{ marginTop: 8 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.textMid, marginBottom: 10 }}>
+            Choose a meal for <span style={{ color: T.gold }}>{selectingFor}</span>:
+          </div>
+          <input value={plannerSearch} onChange={(e) => setPlannerSearch(e.target.value)}
+            placeholder="Search meals..." style={{ ...inputStyle, marginBottom: 8 }} />
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 8 }}>
+            {["all", ...Object.keys(CUISINE_COLORS)].map((c) => {
+              const icon = c === "all" ? "🍽" : CUISINE_COLORS[c].icon;
+              const active = plannerCuisine === c;
+              const cc = c !== "all" ? CUISINE_COLORS[c] : null;
+              return (
+                <button key={c} type="button" onClick={() => setPlannerCuisine(c)}
+                  style={{
+                    ...btn(active ? (cc ? cc.bg : T.goldFaint) : T.surfaceHi,
+                           active ? (cc ? cc.color : T.gold) : T.textMid),
+                    fontSize: 11, padding: "4px 10px",
+                    border: active ? `1.5px solid ${cc ? cc.color : T.gold}40` : `1.5px solid ${T.border}`,
+                  }}>
+                  {icon} {c === "all" ? "All" : c}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+            {["all", "healthy", "kid-friendly", "budget"].map((t) => (
+              <button key={t} type="button" onClick={() => setPlannerTag(t)}
+                style={{
+                  ...btn(plannerTag === t ? T.goldFaint : T.surfaceHi,
+                         plannerTag === t ? T.gold : T.textMid),
+                  fontSize: 11, padding: "4px 10px",
+                  border: plannerTag === t ? `1.5px solid ${T.gold}50` : `1.5px solid ${T.border}`,
+                }}>
+                {t === "all" ? "All Tags" : t}
+              </button>
+            ))}
+          </div>
+          {(() => {
+            const pickerMeals = meals.filter((m) => {
+              const cOk = plannerCuisine === "all" || m.cuisine === plannerCuisine;
+              const tOk = plannerTag === "all" || m.tags.includes(plannerTag);
+              const sOk = !plannerSearch || m.name.toLowerCase().includes(plannerSearch.toLowerCase());
+              return cOk && tOk && sOk;
+            });
+            return pickerMeals.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 24, color: T.textDim, fontSize: 13 }}>
+                No meals match — try clearing a filter.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {pickerMeals.map((meal) => (
+                  <MealCard key={meal.id} meal={meal} compact
+                    onSelect={assignMeal} selected={week[selectingFor] === meal.id} />
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {weeklyMealCount > 0 && !selectingFor && (
+        <button type="button" onClick={() => setTab(2)}
+          style={{ ...btn(T.gold, "#0f1117"), padding: "13px", fontSize: 14,
+            fontWeight: 700, marginTop: 8, borderRadius: 12 }}>
+          View Grocery List ({groceries.length} items) →
+        </button>
+      )}
+    </div>
+  )}
+
+  {/* ── GROCERY LIST ── */}
+  {tab === 2 && (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {weeklyMealCount === 0 ? (
+        <div style={{ textAlign: "center", padding: 40, color: T.textMid }}>
+          <div style={{ fontSize: 40, marginBottom: 10 }}>📅</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: T.text }}>No meals planned yet</div>
+          <p style={{ fontSize: 13, color: T.textMid }}>Go to Weekly Planner and pick your dinners first.</p>
+          <button type="button" onClick={() => setTab(1)}
+            style={{ ...btn(T.gold, "#0f1117"), padding: "9px 20px", fontWeight: 700 }}>
+            Go to Planner
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Weekly summary */}
+          <div style={{ background: T.surface, borderRadius: 14, padding: 16, border: `1.5px solid ${T.border}` }}>
+            <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", fontSize: 18,
+              fontWeight: 700, marginBottom: 12, color: T.text }}>🗓 This Week</div>
+            {DAYS.map((day) => {
+              const m = meals.find((x) => x.id === week[day]);
+              return (
+                <div key={day} style={{ display: "flex", padding: "6px 0",
+                  borderBottom: `1px solid ${T.border}`, fontSize: 13, alignItems: "center" }}>
+                  <span style={{ color: T.textMid, fontWeight: 600, width: 90, flexShrink: 0 }}>
+                    {day}
+                  </span>
+                  <span style={{ color: m ? T.text : T.textDim, flex: 1 }}>
+                    {m ? (
+                      <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        {m.name}
+                        {m.recipeUrl && (
+                          <a href={m.recipeUrl} target="_blank" rel="noopener noreferrer"
+                            style={{ fontSize: 11, color: T.gold, textDecoration: "none" }}>🔗</a>
+                        )}
+                      </span>
+                    ) : "—"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Ingredient checklist */}
+          <div style={{ background: T.surface, borderRadius: 14, padding: 16, border: `1.5px solid ${T.border}` }}>
+            <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", fontSize: 18,
+              fontWeight: 700, marginBottom: 12, color: T.text }}>
+              🛒 {groceries.length} Ingredients
+            </div>
+            {groceries.map((ing, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10,
+                padding: "7px 0", borderBottom: `1px solid ${T.border}` }}>
+                <span style={{ width: 18, height: 18, borderRadius: 5,
+                  border: `1.5px solid ${T.borderHi}`, flexShrink: 0, display: "inline-block" }} />
+                {ing.amount && (
+                  <span style={{ fontSize: 13, fontWeight: 700, color: T.gold,
+                    minWidth: 64, flexShrink: 0 }}>
+                    {ing.amount}
+                  </span>
+                )}
+                <span style={{ fontSize: 14, color: T.text, textTransform: "capitalize" }}>
+                  {ing.name}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Store links */}
+          <div style={{ background: T.surface, borderRadius: 14, padding: 16, border: `1.5px solid ${T.border}` }}>
+            <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", fontSize: 18,
+              fontWeight: 700, marginBottom: 4, color: T.text }}>🏪 Shop Online</div>
+            <p style={{ fontSize: 12, color: T.textMid, margin: "0 0 12px" }}>
+              Copy your list below, then paste ingredients into the store's search.
+            </p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {[
+                { name: "Albertsons", url: "https://www.albertsons.com/shop/aisles/delivery.html", color: "#1a3a6e" },
+                { name: "Ralphs", url: "https://www.ralphs.com/pl/grocery/04963?fulfillment=PICKUP", color: "#7a0e1e" },
+                { name: "Target", url: "https://www.target.com/c/grocery/-/N-5xtg6", color: "#6b0000" },
+                { name: "Instacart", url: "https://www.instacart.com", color: "#1a5c1a" },
+              ].map((store) => (
+                <a key={store.name} href={store.url} target="_blank" rel="noopener noreferrer"
+                  style={{ display: "inline-block", padding: "8px 16px", borderRadius: 8,
+                    fontSize: 13, fontWeight: 700, background: store.color, color: T.text,
+                    textDecoration: "none", letterSpacing: 0.3, border: `1px solid ${T.borderHi}` }}>
+                  {store.name} →
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Copy button */}
+          <button type="button" onClick={copyList}
+            style={{
+              ...btn(copied ? "rgba(74,222,128,0.15)" : T.gold,
+                     copied ? T.green : "#0f1117"),
+              padding: "14px", fontSize: 14, fontWeight: 700, borderRadius: 12,
+              transition: "all 0.2s",
+              border: copied ? `1.5px solid ${T.green}` : "none",
+            }}>
+            {copied ? "✓ Copied to Clipboard!" : "📋 Copy Full List to Paste into Store"}
+          </button>
+
+          <div style={{ background: T.greenFaint, border: `1.5px solid rgba(74,222,128,0.2)`,
+            borderRadius: 12, padding: "12px 16px", fontSize: 12, color: "#86efac" }}>
+            <strong>💡 Tip:</strong> Copy the list, open Albertsons / Ralphs / Target, and paste each ingredient into their search bar to add to your cart.
+          </div>
+        </>
+      )}
+    </div>
+  )}
+</div>
+```
+
+);
+}
